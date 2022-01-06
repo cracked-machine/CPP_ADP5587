@@ -30,17 +30,40 @@ namespace adp5587
 Driver::Driver()
 {
     probe_i2c();
-    std::array<uint8_t, 1> read_byte;
 
-    // read the config register
-	read_register(static_cast<uint8_t>(Registers::CFG), read_byte);
+    // store the device id
+    std::array<uint8_t, 1> dev_id_byte;
+    read_register(Registers::DEV_ID, dev_id_byte);
+    device_id = dev_id_byte.at(0);
+
+    std::array<uint8_t, 1> kpsel_byte {0xFF};
+    write_register(Registers::KP_GPIO1, kpsel_byte);
+    read_register(Registers::KP_GPIO1, kpsel_byte);
+    write_register(Registers::KP_GPIO2, kpsel_byte);
+    read_register(Registers::KP_GPIO2, kpsel_byte);
+    write_register(Registers::KP_GPIO3, kpsel_byte);
+    read_register(Registers::KP_GPIO3, kpsel_byte);   
+
+    enable_key_interrupts();
+
+    get_key_event_counter();
+
+
+
+    // check_key_event(KeyEventRegisters::KEY_EVENTA, 
+    //     (KeyEvents::KEY0 | KeyEvents::KEY1 | KeyEvents::KEY2 | KeyEvents::KEY3 | 
+    //     KeyEvents::KEY4 | KeyEvents::KEY5 | KeyEvents::KEY6 | KeyEvents::KEY7) );
+
+    // // read the config register
+    // std::array<uint8_t, 1> config_byte;
+	// read_register(static_cast<uint8_t>(Registers::CFG), config_byte);
     
-    // write to the config register
-    std::array<uint8_t, 1> new_byte { 0x00 };
-    write_register(static_cast<uint8_t>(Registers::CFG), new_byte);
+    // // write to the config register
+    // std::array<uint8_t, 1> new_byte { 0x00 };
+    // write_register(static_cast<uint8_t>(Registers::CFG), new_byte);
     
-    // read new value from the config register
-    read_register(static_cast<uint8_t>(Registers::CFG), read_byte);
+    // // read new value from the config register
+    // read_register(static_cast<uint8_t>(Registers::CFG), config_byte);
 	
 }
 
@@ -62,4 +85,46 @@ bool Driver::probe_i2c()
     return success;
 }
 
+void Driver::enable_key_interrupts()
+{
+    std::array<uint8_t, 1> config_byte { ConfigRegister::KE_IEN };
+    write_register(Registers::CFG, config_byte);
+    read_register(Registers::CFG, config_byte);
+
 }
+
+bool Driver::is_key_isr_detected()
+{
+    std::array<uint8_t, 1> isr_byte {0};
+    read_register(Registers::INT_STAT, isr_byte);        
+    if ( (isr_byte.at(0) & IsrRegister::KE_INT) == IsrRegister::KE_INT)
+    {
+        return true;
+    }
+    return false;
+}
+
+void Driver::get_key_event_counter()
+{
+    std::array<uint8_t, 1> kec_byte {0};
+    read_register(Registers::KEY_LCK_EC_STAT, kec_byte);    
+
+}
+
+void Driver::clear_isr(uint8_t isr_mask)
+{
+    std::array<uint8_t, 1> isr_byte { isr_mask };
+    write_register(Registers::INT_STAT, isr_byte);
+    read_register(Registers::INT_STAT, isr_byte);    
+}
+
+bool Driver::check_key_event(KeyEventRegisters ke_reg, uint8_t ke_mask)
+{
+
+    std::array<uint8_t, 1> ke_mask_byte { ke_mask };
+    read_register(ke_reg, ke_mask_byte);
+    if ( (ke_mask_byte.at(0) & ke_mask) == ke_mask ) { return true; }
+    else { return false; }
+}
+
+} // namespace adp5587

@@ -34,26 +34,87 @@
 #endif
 
 #include <array>
+#include <bitset>
 #include <ll_i2c_utils.hpp>
 
 namespace adp5587
 {
 
-enum class Registers
-{
-    DEV_ID              = 0x00,
-    CFG                 = 0x01,
-    INT_STAT            = 0x02
-};
+
+
 
 class Driver
 {
 public:
+    // @brief Construct a new Driver object
     Driver();
+    
+    enum Registers
+    {
+        DEV_ID              = 0x00,
+        CFG                 = 0x01,
+        INT_STAT            = 0x02,
+        KEY_LCK_EC_STAT     = 0x03,
+        KP_GPIO1            = 0x1D,
+        KP_GPIO2            = 0x1E,
+        KP_GPIO3            = 0x1F
+    }; 
+
+    enum KeyEventRegisters
+    {
+        KEY_EVENTA          = 0x04,
+        KEY_EVENTB          = 0x05,
+        KEY_EVENTC          = 0x06,
+        KEY_EVENTD          = 0x07
+    };
+
+    enum KeyEvents 
+    {
+        KEY0            = (1 << 0x00),
+        KEY1            = (1 << 0x01),
+        KEY2            = (1 << 0x02),
+        KEY3            = (1 << 0x03),
+        KEY4            = (1 << 0x04),
+        KEY5            = (1 << 0x05),
+        KEY6            = (1 << 0x06),
+        KEY7            = (1 << 0x07)
+    };
 
     // @brief Confirm ADP5587 replies to write_addr and read_addr with ACK 
     // @return true if both are successful, false if either fail.
     bool probe_i2c();
+
+    void enable_key_interrupts();
+    void clear_isr(uint8_t isr_mask);
+    bool check_key_event(KeyEventRegisters ke_reg, uint8_t event_mask);
+    bool is_key_isr_detected();
+    void get_key_event_counter();
+
+private:
+
+
+
+    enum ConfigRegister 
+    {
+        AUTO_INC            = (1 << 0x07),
+        GPIEM_CFG           = (1 << 0x06),
+        OVR_FLOW_M          = (1 << 0x05),
+        INT_CFG             = (1 << 0x04),
+        OVR_FLOW_IEN        = (1 << 0x03),
+        K_LCK_IM            = (1 << 0x02),
+        GPI_IEN             = (1 << 0x01),
+        KE_IEN              = (1 << 0x00)
+    };
+
+    enum IsrRegister
+    {
+        OVR_FLOW_INT    = (1 << 0x03),
+        K_LCK_INT       = (1 << 0x02),
+        GPI_INT         = (1 << 0x01),
+        KE_INT          = (1 << 0x00),
+    };
+
+
     
     // @brief Read some bytes from the ADP5587 register
     // @tparam REG_SIZE 
@@ -67,13 +128,14 @@ public:
     // @param reg The register to modify
     // @param tx_bytes The value to write
     template<std::size_t REG_SIZE>
-    void write_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &res);
+    void write_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &res);    
 
-private:
     // @brief The write address for ADP5587ACPZ-1-R7
     const uint8_t write_addr {0x60};
     // @brief The read address for ADP5587ACPZ-1-R7
     const uint8_t read_addr {0x61};
+
+    uint8_t device_id {0};
 
 };
 

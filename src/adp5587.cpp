@@ -29,9 +29,10 @@ namespace adp5587
 
 Driver::Driver()
 {
+    _i2c_handle = std::unique_ptr<I2C_TypeDef>(I2C3);
     probe_i2c();
 
-    // store the device id
+    // // store the device id
     std::array<uint8_t, 1> dev_id_byte;
     read_register(Registers::DEV_ID, dev_id_byte);
     device_id = dev_id_byte.at(0);
@@ -44,7 +45,8 @@ Driver::Driver()
     write_register(Registers::KP_GPIO3, kpsel_byte);
     read_register(Registers::KP_GPIO3, kpsel_byte);   
 
-    enable_key_interrupts();
+    // causes crash
+    // enable_key_interrupts();
 
     get_key_event_counter();
 
@@ -71,13 +73,13 @@ bool Driver::probe_i2c()
 {
 	bool success {true};
 
-    // check ADP5587 is listening on 0x60 (write) and 0x61 (read)
-	if (stm32::i2c::send_addr(I2C3, write_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
+    // check ADP5587 is listening on 0x60 (write). Left-shift of address is *not* required.
+	if (stm32::i2c::send_addr(_i2c_handle, write_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
     {
         success = false;
     }
-
-	if (stm32::i2c::send_addr(I2C3, read_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
+    // check ADP5587 is listening on 0x61 (read). Left-shift of address is *not* required.
+	if (stm32::i2c::send_addr(_i2c_handle, read_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
 	{
         success = false;
 	}	

@@ -35,13 +35,12 @@
 
 #include <array>
 #include <bitset>
+#include <memory>
+
 #include <ll_i2c_utils.hpp>
 
 namespace adp5587
 {
-
-
-
 
 class Driver
 {
@@ -92,6 +91,7 @@ public:
 
 private:
 
+    std::unique_ptr<I2C_TypeDef> _i2c_handle;
 
 
     enum ConfigRegister 
@@ -145,17 +145,17 @@ void Driver::read_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &rx_
 {
 	// read this number of bytes
 	const uint8_t num_bytes {REG_SIZE};
-	LL_I2C_SetTransferSize(I2C3, num_bytes);
+	LL_I2C_SetTransferSize(_i2c_handle.get(), num_bytes);
 	
 	// send AD5587 write address and the register we want to read
-	stm32::i2c::send_addr(I2C3, write_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_command(I2C3, reg);
+	stm32::i2c::send_addr(_i2c_handle, write_addr, stm32::i2c::MsgType::WRITE);
+	stm32::i2c::send_command(_i2c_handle, reg);
 
 	// send AD5587 read address and get received data
-	stm32::i2c::send_addr(I2C3, read_addr, stm32::i2c::MsgType::READ);
-	stm32::i2c::receive_data(I2C3, rx_bytes);
+	stm32::i2c::send_addr(_i2c_handle, read_addr, stm32::i2c::MsgType::READ);
+	stm32::i2c::receive_data(_i2c_handle, rx_bytes);
 
-	LL_I2C_GenerateStopCondition(I2C3);
+	LL_I2C_GenerateStopCondition(_i2c_handle.get());
 
 	#if defined(USE_RTT) 
 		SEGGER_RTT_printf(0, "\nreg: %u = %u", +reg, +rx_bytes.at(0)); 
@@ -167,16 +167,16 @@ void Driver::write_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &tx
 {
 	// write this number of bytes: The data byte(s) AND the address byte
 	const uint8_t num_bytes {REG_SIZE + 1};
-	LL_I2C_SetTransferSize(I2C3, num_bytes);
+	LL_I2C_SetTransferSize(_i2c_handle.get(), num_bytes);
 	
 	// send AD5587 write address and the register we want to write
-	stm32::i2c::send_addr(I2C3, write_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_command(I2C3, reg);
+	stm32::i2c::send_addr(_i2c_handle, write_addr, stm32::i2c::MsgType::WRITE);
+	stm32::i2c::send_command(_i2c_handle, reg);
 
 	// send AD5587 read address and get received data
-	stm32::i2c::send_data(I2C3, tx_bytes);
+	stm32::i2c::send_data(_i2c_handle, tx_bytes);
 
-	LL_I2C_GenerateStopCondition(I2C3);
+	LL_I2C_GenerateStopCondition(_i2c_handle.get());
  
 }
 

@@ -64,7 +64,13 @@ public:
         KEY_EVENTA          = 0x04,
         KEY_EVENTB          = 0x05,
         KEY_EVENTC          = 0x06,
-        KEY_EVENTD          = 0x07
+        KEY_EVENTD          = 0x07,
+        KEY_EVENTE          = 0x08,
+        KEY_EVENTF          = 0x09,
+        KEY_EVENTG          = 0x0A,
+        KEY_EVENTH          = 0x0B,
+        KEY_EVENTI          = 0x0C,
+        KEY_EVENTJ          = 0x0D,
     };
 
     enum KeyEvents 
@@ -83,11 +89,12 @@ public:
     // @return true if both are successful, false if either fail.
     bool probe_i2c();
 
-    void enable_key_interrupts();
+    void write_config_bits(uint8_t config_bits);
     void clear_isr(uint8_t isr_mask);
     bool check_key_event(KeyEventRegisters ke_reg, uint8_t event_mask);
     bool is_key_isr_detected();
     void get_key_event_counter();
+    void get_isr_info();
 
 private:
 
@@ -96,14 +103,14 @@ private:
 
     enum ConfigRegister 
     {
-        AUTO_INC            = (1 << 0x07),
-        GPIEM_CFG           = (1 << 0x06),
-        OVR_FLOW_M          = (1 << 0x05),
-        INT_CFG             = (1 << 0x04),
-        OVR_FLOW_IEN        = (1 << 0x03),
-        K_LCK_IM            = (1 << 0x02),
-        GPI_IEN             = (1 << 0x01),
-        KE_IEN              = (1 << 0x00)
+        AUTO_INC            = (0x08),
+        GPIEM_CFG           = (0x07),
+        OVR_FLOW_M          = (0x06),
+        INT_CFG             = (0x05),
+        OVR_FLOW_IEN        = (0x04),
+        K_LCK_IM            = (0x03),
+        GPI_IEN             = (0x02),
+        KE_IEN              = (0x01)
     };
 
     enum IsrRegister
@@ -119,67 +126,22 @@ private:
     // @brief Read some bytes from the ADP5587 register
     // @tparam REG_SIZE 
     // @param reg The register to read
-    template<std::size_t REG_SIZE>
-    void read_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &rx_bytes);
+    void read_register(const uint8_t reg, uint8_t &rx_byte);
 
 
     // @brief Write the byte array to the ADP5587 register
     // @tparam REG_SIZE 
     // @param reg The register to modify
     // @param tx_bytes The value to write
-    template<std::size_t REG_SIZE>
-    void write_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &res);    
+    void write_register(const uint8_t reg, uint8_t &tx_byte);    
 
-    // @brief The write address for ADP5587ACPZ-1-R7
-    const uint8_t write_addr {0x60};
-    // @brief The read address for ADP5587ACPZ-1-R7
-    const uint8_t read_addr {0x61};
+    // @brief The i2c slave address for ADP5587ACPZ-1-R7
+    const uint8_t m_i2c_addr {0x60};
 
-    uint8_t device_id {0};
+
+    uint8_t m_device_id {0};
 
 };
-
-
-template<std::size_t REG_SIZE>
-void Driver::read_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &rx_bytes)
-{
-	// read this number of bytes
-	const uint8_t num_bytes {REG_SIZE};
-	LL_I2C_SetTransferSize(_i2c_handle.get(), num_bytes);
-	
-	// send AD5587 write address and the register we want to read
-	stm32::i2c::send_addr(_i2c_handle, write_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_command(_i2c_handle, reg);
-
-	// send AD5587 read address and get received data
-	stm32::i2c::send_addr(_i2c_handle, read_addr, stm32::i2c::MsgType::READ);
-	stm32::i2c::receive_data(_i2c_handle, rx_bytes);
-
-	LL_I2C_GenerateStopCondition(_i2c_handle.get());
-
-	#if defined(USE_RTT) 
-		SEGGER_RTT_printf(0, "\nreg: %u = %u", +reg, +rx_bytes.at(0)); 
-	#endif		    
-}
-
-template<std::size_t REG_SIZE>
-void Driver::write_register(const uint8_t reg, std::array<uint8_t, REG_SIZE> &tx_bytes)
-{
-	// write this number of bytes: The data byte(s) AND the address byte
-	const uint8_t num_bytes {REG_SIZE + 1};
-	LL_I2C_SetTransferSize(_i2c_handle.get(), num_bytes);
-	
-	// send AD5587 write address and the register we want to write
-	stm32::i2c::send_addr(_i2c_handle, write_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_command(_i2c_handle, reg);
-
-	// send AD5587 read address and get received data
-	stm32::i2c::send_data(_i2c_handle, tx_bytes);
-
-	LL_I2C_GenerateStopCondition(_i2c_handle.get());
- 
-}
-
 
 
 } // namespace adp5587

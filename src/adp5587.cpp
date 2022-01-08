@@ -35,11 +35,20 @@ Driver::Driver()
     // check the slave device is talking
     probe_i2c();
 
-    // get some default ISR values
-    get_isr_info();
+    // check the POR state of the "Interrupt status" and "Keylock and event counter" register
+    uint8_t int_stat_byte {0};
+    uint8_t key_lck_ec_stat_byte {0};
+    read_register(Registers::INT_STAT, int_stat_byte);
+    read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);
+
+    clear_fifo_and_isr();
+    
+    // check they have been reset
+    read_register(Registers::INT_STAT, int_stat_byte);
+    read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);    
 
     // 1) Enable keypad interrupts
-    write_config_bits(ConfigRegister::KE_IEN);
+    write_config_bits(ConfigReg::KE_IEN);
 
     // 2) Enable the keypad rows and columns 
     uint8_t kpsel_byte {0xFF};
@@ -50,28 +59,76 @@ Driver::Driver()
     write_register(Registers::KP_GPIO3, kpsel_byte);
     read_register(Registers::KP_GPIO3, kpsel_byte);   
 
+
+
 }
 
-void Driver::get_isr_info()
+void Driver::clear_fifo_and_isr()
 {
-    uint8_t rx_byte {0};
-    read_register(Registers::DEV_ID, rx_byte);
-    read_register(Registers::CFG, rx_byte);
-    read_register(Registers::INT_STAT, rx_byte);
-    read_register(Registers::KEY_LCK_EC_STAT, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTA, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTB, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTC, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTD, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTE, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTF, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTG, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTH, rx_byte);
-    read_register(KeyEventRegisters::KEY_EVENTI, rx_byte);
+    // clear the key event FIFO by reading each register
+    uint8_t ke_byte {0};
+    read_register(KeyEventReg::KEY_EVENTA, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTB, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTC, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTD, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTE, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTF, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTG, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTH, ke_byte);
+    read_register(KeyEventReg::KEY_EVENTI, ke_byte);    
+
+    // clear all interrupts
+    write_register(Registers::INT_STAT, (IntStatusReg::KE_INT | IntStatusReg::GPI_INT | IntStatusReg::K_LCK_INT | IntStatusReg::OVR_FLOW_INT));    
+}
+
+void Driver::get_fifo_bytes()
+{
+    // read the FIFO bytes into class member byte array
+    read_register(KeyEventReg::KEY_EVENTA, key_event_fifo.at(0));
+    read_register(KeyEventReg::KEY_EVENTB, key_event_fifo.at(1));
+    read_register(KeyEventReg::KEY_EVENTC, key_event_fifo.at(2));
+    read_register(KeyEventReg::KEY_EVENTD, key_event_fifo.at(3));
+    read_register(KeyEventReg::KEY_EVENTE, key_event_fifo.at(4));
+    read_register(KeyEventReg::KEY_EVENTF, key_event_fifo.at(5));
+    read_register(KeyEventReg::KEY_EVENTG, key_event_fifo.at(6));
+    read_register(KeyEventReg::KEY_EVENTH, key_event_fifo.at(7));
+    read_register(KeyEventReg::KEY_EVENTI, key_event_fifo.at(8));
+    read_register(KeyEventReg::KEY_EVENTJ, key_event_fifo.at(9));
+
 
     //              1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16
     //  UpperRow    131/3   141/13  151/23  161/33  171/43  181/53  191/63  201/73  132/4   142/14  152/24  162/34  172/44  182/54  192/64  202/74
     //  LowerRow    129/1   139/11  149/21  159/31  169/41  179/51  189/61  199/71  130/2   140/12  150/22  160/32  170/42  180/52  190/62  200/72
+
+}
+
+void Driver::process_fifo()
+{
+    // check the "Key events interrupt" bit is set
+    uint8_t int_stat_byte {0};
+    read_register(Registers::INT_STAT, int_stat_byte);
+
+    if ( (int_stat_byte & IntStatusReg::KE_INT) == IntStatusReg::KE_INT)
+    {
+        // now check if the "key event counter" is zero
+        uint8_t key_lck_ec_stat_byte {0};
+        read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);
+        if ((key_lck_ec_stat_byte & (KeyLckEvCntReg::KEC1 | KeyLckEvCntReg::KEC2 | KeyLckEvCntReg::KEC3)) == 0)
+        {
+            // The "Key events interrupt" bit needs resetting. Write 1 to the KE_INT bit to reset it
+            write_register(Registers::INT_STAT, IntStatusReg::KE_INT);
+        }
+        else
+        {
+            // read the FIFO data (which also clears the FIFO and event counter)
+            get_fifo_bytes();
+
+
+            // The "Key events interrupt" bit needs resetting. Write 1 to the KE_INT bit to reset it
+            write_register(Registers::INT_STAT, IntStatusReg::KE_INT);
+
+        }
+    }
 
 }
 
@@ -94,40 +151,6 @@ void Driver::write_config_bits(uint8_t config_bits)
     uint8_t new_byte {0};
     read_register(Registers::CFG, new_byte);
 
-}
-
-bool Driver::is_key_isr_detected()
-{
-    uint8_t isr_byte {0};
-    read_register(Registers::INT_STAT, isr_byte);        
-    if ( (isr_byte & IsrRegister::KE_INT) == IsrRegister::KE_INT)
-    {
-        return true;
-    }
-    return false;
-}
-
-void Driver::get_key_event_counter()
-{
-    uint8_t kec_byte {0};
-    read_register(Registers::KEY_LCK_EC_STAT, kec_byte);    
-
-}
-
-void Driver::clear_isr(uint8_t isr_mask)
-{
-    uint8_t isr_byte { isr_mask };
-    write_register(Registers::INT_STAT, isr_byte);
-    read_register(Registers::INT_STAT, isr_byte);    
-}
-
-bool Driver::check_key_event(KeyEventRegisters ke_reg, uint8_t ke_mask)
-{
-
-    uint8_t ke_mask_byte { ke_mask };
-    read_register(ke_reg, ke_mask_byte);
-    if ( (ke_mask_byte & ke_mask) == ke_mask ) { return true; }
-    else { return false; }
 }
 
 void Driver::read_register(const uint8_t reg, uint8_t &rx_byte)
@@ -190,8 +213,6 @@ void Driver::read_register(const uint8_t reg, uint8_t &rx_byte)
             case 0x0D: 
                 SEGGER_RTT_printf(0, "\nKey Event Register J (%u): %u", +reg, +rx_byte);
                 break;
-            
-
             case 0x1D: 
                 SEGGER_RTT_printf(0, "\nR0-R7 Keypad selection (%u): %u", +reg, +rx_byte);
                 break;
@@ -208,7 +229,7 @@ void Driver::read_register(const uint8_t reg, uint8_t &rx_byte)
 }
 
 
-void Driver::write_register(const uint8_t reg, uint8_t &tx_byte)
+void Driver::write_register(const uint8_t reg, uint8_t tx_byte)
 {
 	// write this number of bytes: The data byte(s) AND the address byte
 	const uint8_t num_bytes {2};

@@ -59,7 +59,7 @@ public:
         KP_GPIO3            = 0x1F
     }; 
 
-    enum KeyEventRegisters
+    enum KeyEventReg
     {
         KEY_EVENTA          = 0x04,
         KEY_EVENTB          = 0x05,
@@ -73,55 +73,59 @@ public:
         KEY_EVENTJ          = 0x0D,
     };
 
-    enum KeyEvents 
-    {
-        KEY0            = (1 << 0x00),
-        KEY1            = (1 << 0x01),
-        KEY2            = (1 << 0x02),
-        KEY3            = (1 << 0x03),
-        KEY4            = (1 << 0x04),
-        KEY5            = (1 << 0x05),
-        KEY6            = (1 << 0x06),
-        KEY7            = (1 << 0x07)
-    };
+
 
     // @brief Confirm ADP5587 replies to write_addr and read_addr with ACK 
     // @return true if both are successful, false if either fail.
     bool probe_i2c();
 
     void write_config_bits(uint8_t config_bits);
-    void clear_isr(uint8_t isr_mask);
-    bool check_key_event(KeyEventRegisters ke_reg, uint8_t event_mask);
-    bool is_key_isr_detected();
-    void get_key_event_counter();
-    void get_isr_info();
+    
+    
+    // @brief If "Key events interrupt" is set and "event counter" is non-zerom, read the FIFO data. 
+    // Otherwise if "event counter" is zero, reset the "Key events interrupt"
+    void process_fifo();
 
 private:
 
+    // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
     std::unique_ptr<I2C_TypeDef> _i2c_handle;
 
+    // @brief local store for ADP5587 key event registers
+    std::array<uint8_t, 10> key_event_fifo {0};
+    
+    // @brief Read the FIFO bytes into "key_event_fifo" member byte array
+    void get_fifo_bytes();
 
-    enum ConfigRegister 
+    enum ConfigReg
     {
-        AUTO_INC            = (0x08),
-        GPIEM_CFG           = (0x07),
-        OVR_FLOW_M          = (0x06),
-        INT_CFG             = (0x05),
-        OVR_FLOW_IEN        = (0x04),
-        K_LCK_IM            = (0x03),
-        GPI_IEN             = (0x02),
-        KE_IEN              = (0x01)
+        KE_IEN              = 0x01,
+        GPI_IEN             = 0x02,
+        K_LCK_IM            = 0x03,
+        OVR_FLOW_IEN        = 0x04,
+        INT_CFG             = 0x05,
+        OVR_FLOW_M          = 0x06,
+        GPIEM_CFG           = 0x07,
+        AUTO_INC            = 0x08,
     };
 
-    enum IsrRegister
+    enum IntStatusReg
     {
-        OVR_FLOW_INT    = (1 << 0x03),
-        K_LCK_INT       = (1 << 0x02),
-        GPI_INT         = (1 << 0x01),
-        KE_INT          = (1 << 0x00),
+        KE_INT              = 0x01,
+        GPI_INT             = 0x02,
+        K_LCK_INT           = 0x03,
+        OVR_FLOW_INT        = 0x04,
     };
 
-
+    enum KeyLckEvCntReg
+    {
+        KEC1                = 0x01,
+        KEC2                = 0x02,
+        KEC3                = 0x03,
+        LCK1                = 0x04,
+        LCK2                = 0x05,
+        K_LCK_EN            = 0x06,
+    };
     
     // @brief Read some bytes from the ADP5587 register
     // @tparam REG_SIZE 
@@ -133,7 +137,13 @@ private:
     // @tparam REG_SIZE 
     // @param reg The register to modify
     // @param tx_bytes The value to write
-    void write_register(const uint8_t reg, uint8_t &tx_byte);    
+    void write_register(const uint8_t reg, uint8_t tx_byte);    
+
+    // @brief clear the Key Event Registers (KEY_EVENTx) by reading them and 
+    // clear the Interrupt status register (INT_STAT) by writing 1 to each bit
+    void clear_fifo_and_isr();
+
+ 
 
     // @brief The i2c slave address for ADP5587ACPZ-1-R7
     const uint8_t m_i2c_addr {0x60};

@@ -137,74 +137,74 @@ void Driver::read_register(const uint8_t reg, uint8_t &rx_byte)
 	
 	// send AD5587 write address and the register we want to read
 	stm32::i2c::send_addr(_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_command(_i2c_handle, reg);
+	stm32::i2c::send_byte(_i2c_handle, reg);
 
 	// send AD5587 read address and get received data
 	stm32::i2c::send_addr(_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::READ);
-	stm32::i2c::receive_data(_i2c_handle, rx_byte);
+	stm32::i2c::receive_byte(_i2c_handle, rx_byte);
 
 	LL_I2C_GenerateStopCondition(_i2c_handle.get());
 
-	// #if defined(USE_RTT) 
-    //     switch(reg)
-    //     {
-    //         case 0x00:
-    //             SEGGER_RTT_printf(0, "\n\nDeviceID (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x01:
-    //             SEGGER_RTT_printf(0, "\nConfiguration Register 1 (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x02: 
-    //             SEGGER_RTT_printf(0, "\nInterrupt status register (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x03: 
-    //             SEGGER_RTT_printf(0, "\nKeylock and event counter register (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x04: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register A (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x05: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register B (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x06: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register C (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x07: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register D (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x08: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register E (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x09: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register F (%u): %u", +reg, +rx_byte);
-    //             break;                
-    //         case 0x0A: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register G (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x0B: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register H (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x0C: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register I (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x0D: 
-    //             SEGGER_RTT_printf(0, "\nKey Event Register J (%u): %u", +reg, +rx_byte);
-    //             break;
+	#if defined(USE_RTT) 
+        switch(reg)
+        {
+            case 0x00:
+                SEGGER_RTT_printf(0, "\n\nDeviceID (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x01:
+                SEGGER_RTT_printf(0, "\nConfiguration Register 1 (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x02: 
+                SEGGER_RTT_printf(0, "\nInterrupt status register (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x03: 
+                SEGGER_RTT_printf(0, "\nKeylock and event counter register (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x04: 
+                SEGGER_RTT_printf(0, "\nKey Event Register A (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x05: 
+                SEGGER_RTT_printf(0, "\nKey Event Register B (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x06: 
+                SEGGER_RTT_printf(0, "\nKey Event Register C (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x07: 
+                SEGGER_RTT_printf(0, "\nKey Event Register D (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x08: 
+                SEGGER_RTT_printf(0, "\nKey Event Register E (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x09: 
+                SEGGER_RTT_printf(0, "\nKey Event Register F (%u): %u", +reg, +rx_byte);
+                break;                
+            case 0x0A: 
+                SEGGER_RTT_printf(0, "\nKey Event Register G (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x0B: 
+                SEGGER_RTT_printf(0, "\nKey Event Register H (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x0C: 
+                SEGGER_RTT_printf(0, "\nKey Event Register I (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x0D: 
+                SEGGER_RTT_printf(0, "\nKey Event Register J (%u): %u", +reg, +rx_byte);
+                break;
             
 
-    //         case 0x1D: 
-    //             SEGGER_RTT_printf(0, "\nR0-R7 Keypad selection (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x1E: 
-    //             SEGGER_RTT_printf(0, "\nC0-C7 Keypad selection (%u): %u", +reg, +rx_byte);
-    //             break;
-    //         case 0x1F: 
-    //             SEGGER_RTT_printf(0, "\nC8-C9 Keypad selection (%u): %u", +reg, +rx_byte);
-    //             break;                                
+            case 0x1D: 
+                SEGGER_RTT_printf(0, "\nR0-R7 Keypad selection (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x1E: 
+                SEGGER_RTT_printf(0, "\nC0-C7 Keypad selection (%u): %u", +reg, +rx_byte);
+                break;
+            case 0x1F: 
+                SEGGER_RTT_printf(0, "\nC8-C9 Keypad selection (%u): %u", +reg, +rx_byte);
+                break;                                
 
-    //     }
+        }
 		
-	// #endif		    
+	#endif		    
 }
 
 
@@ -216,10 +216,10 @@ void Driver::write_register(const uint8_t reg, uint8_t &tx_byte)
 	
 	// send AD5587 write address and the register we want to write
 	stm32::i2c::send_addr(_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_command(_i2c_handle, reg);
+	stm32::i2c::send_byte(_i2c_handle, reg);
 
 	// send AD5587 read address and get received data
-	stm32::i2c::send_data(_i2c_handle, tx_byte);
+	stm32::i2c::send_byte(_i2c_handle, tx_byte);
 
 	LL_I2C_GenerateStopCondition(_i2c_handle.get());
  

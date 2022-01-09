@@ -22,15 +22,18 @@
 
 #include <adp5587.hpp>
 #include <cstdint>
-
+#include <exti_interrupt.hpp>
 
 namespace adp5587
 {
 
 Driver::Driver()
 {
+    interrupt_ptr = new ExtiInterrupt(std::unique_ptr<Driver>(this));
+
     // init the I2C periph handle
     _i2c_handle = std::unique_ptr<I2C_TypeDef>(I2C3);
+
 
     // check the slave device is talking
     probe_i2c();

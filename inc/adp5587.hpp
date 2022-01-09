@@ -37,13 +37,13 @@
 #include <bitset>
 #include <memory>
 
+#include <ll_i2c_utils.hpp>
 // EXTI4_15InterruptHandler
 #include <exti_4_15_interrupt_handler.hpp>
 
-#include <ll_i2c_utils.hpp>
-
 namespace adp5587
 {
+
 
 // forward declaration
 class EXTI4_15InterruptHandler;
@@ -91,8 +91,6 @@ public:
     // @brief If "Key events interrupt" is set and "event counter" is non-zerom, read the FIFO data. 
     // Otherwise if "event counter" is zero, reset the "Key events interrupt"
     void process_fifo();
-
-
 
 private:
 

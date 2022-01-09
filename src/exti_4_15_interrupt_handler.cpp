@@ -26,12 +26,14 @@
 namespace adp5587
 {
 
-EXTI4_15InterruptHandler::EXTI4_15InterruptHandler(ISRVectorTableEnums interrupt_number, std::unique_ptr<adp5587::Driver> &driver_instance) 
-    : _driver_instance (std::move(driver_instance))
+EXTI4_15InterruptHandler::EXTI4_15InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance) 
+: _driver_instance (std::move(driver_instance))
 {
     // Pass the interrupt number/driver pointer up to the base class.
     std::unique_ptr<InterruptManagerBase> this_ext_interrupt = std::unique_ptr<InterruptManagerBase>(this);
-    InterruptManagerBase::Register(interrupt_number, this_ext_interrupt);
+    InterruptManagerBase::register_handler(
+        isr::stm32g0::InterruptManagerBase::ISRVectorTableEnums::exti4_15_irqhandler, 
+        this_ext_interrupt);
 }
 
 void EXTI4_15InterruptHandler::ISR()

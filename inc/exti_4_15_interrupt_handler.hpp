@@ -38,9 +38,8 @@ class EXTI4_15InterruptHandler : public isr::stm32g0::InterruptManagerBase
 {
 public:
     // @brief Construct a new EXTI4_15InterruptHandler object
-    // @param interrupt_number The interrupt type to register
     // @param driver_instance The driver to call when the interrupt is triggered.
-    EXTI4_15InterruptHandler(ISRVectorTableEnums interrupt_number, std::unique_ptr<adp5587::Driver> &driver_instance);
+    EXTI4_15InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance);
 
     // @brief called by isr::stm32g0::InterruptManagerBase when registered interrupt is triggered by MCU
     virtual void ISR(void);

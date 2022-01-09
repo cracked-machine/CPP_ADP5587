@@ -52,9 +52,8 @@ class Driver
 {
 public:
 
-    // friend class EXTI4_15InterruptHandler;
     // @brief Construct a new Driver object
-    Driver();
+    Driver(I2C_TypeDef *i2c_handle);
     
     enum Registers
     {

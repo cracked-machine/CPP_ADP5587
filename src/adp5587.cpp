@@ -31,16 +31,14 @@
 namespace adp5587
 {
 
-Driver::Driver()
+Driver::Driver(I2C_TypeDef *i2c_handle)
 {
     // pass this Driver instance to the external interrupt manager as reference
     std::unique_ptr<Driver> this_driver = std::unique_ptr<Driver>(this);
-    interrupt_ptr = std::make_unique<EXTI4_15InterruptHandler>(
-        isr::stm32g0::InterruptManagerBase::ISRVectorTableEnums::exti4_15_irqhandler, 
-        this_driver);
+    interrupt_ptr = std::make_unique<EXTI4_15InterruptHandler>(this_driver);
 
     // set the I2C_TypeDef pointer here
-    _i2c_handle = std::unique_ptr<I2C_TypeDef>(I2C3);
+    _i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
 
 
     // check the slave device is talking

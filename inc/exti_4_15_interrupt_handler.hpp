@@ -20,22 +20,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <exti_interrupt.hpp>
+#ifndef __EXT_INTERRUPT_MANAGER_HPP__
+#define __EXT_INTERRUPT_MANAGER_HPP__
 
+#include <interrupt_manager_base.hpp>
+
+#include <memory>
 
 namespace adp5587
 {
 
-ExtiInterrupt::ExtiInterrupt(std::unique_ptr<Driver> owner_ptr)
-{
-    interrupt_owner_ptr = std::move(owner_ptr);
-    InterruptBase::Register(InterruptVectors::exti4_15_irqhandler, this);
+// forward declaration
+class Driver;
 
-}
-
-void ExtiInterrupt::ISR()
+// @brief class for handling EXTI4_15 interrupts
+class EXTI4_15InterruptHandler : public isr::stm32g0::InterruptManagerBase
 {
-    interrupt_owner_ptr->get_fifo_bytes();
-}
+public:
+    // @brief Construct a new EXTI4_15InterruptHandler object
+    // @param interrupt_number The interrupt type to register
+    // @param driver_instance The driver to call when the interrupt is triggered.
+    EXTI4_15InterruptHandler(ISRVectorTableEnums interrupt_number, std::unique_ptr<adp5587::Driver> &driver_instance);
+
+    // @brief called by isr::stm32g0::InterruptManagerBase when registered interrupt is triggered by MCU
+    virtual void ISR(void);
+
+private:
+    // @brief driver instance for ISR callback
+    std::unique_ptr<adp5587::Driver> _driver_instance;
+};
+
 
 } // namespace adp5587
+
+#endif // __EXT_INTERRUPT_MANAGER_HPP__

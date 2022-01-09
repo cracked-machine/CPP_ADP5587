@@ -21,17 +21,23 @@
 // SOFTWARE.
 
 #include <adp5587.hpp>
+#include <exti_4_15_interrupt_handler.hpp>
+
 #include <cstdint>
-#include <exti_interrupt.hpp>
+#include <cassert>
 
 namespace adp5587
 {
 
 Driver::Driver()
 {
-    interrupt_ptr = new ExtiInterrupt(std::unique_ptr<Driver>(this));
+    // pass this Driver instance to the external interrupt manager as reference
+    std::unique_ptr<Driver> this_driver = std::unique_ptr<Driver>(this);
+    interrupt_ptr = std::make_unique<EXTI4_15InterruptHandler>(
+        isr::stm32g0::InterruptManagerBase::ISRVectorTableEnums::exti4_15_irqhandler, 
+        this_driver);
 
-    // init the I2C periph handle
+    // set the I2C_TypeDef pointer here
     _i2c_handle = std::unique_ptr<I2C_TypeDef>(I2C3);
 
 

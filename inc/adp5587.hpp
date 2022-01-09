@@ -37,6 +37,8 @@
 #include <bitset>
 #include <memory>
 
+// EXTI4_15InterruptHandler
+#include <exti_4_15_interrupt_handler.hpp>
 
 #include <ll_i2c_utils.hpp>
 
@@ -44,13 +46,13 @@ namespace adp5587
 {
 
 // forward declaration
-class ExtiInterrupt;
+class EXTI4_15InterruptHandler;
 
 class Driver
 {
 public:
 
-    friend class ExtiInterrupt;
+    // friend class EXTI4_15InterruptHandler;
     // @brief Construct a new Driver object
     Driver();
     
@@ -79,8 +81,6 @@ public:
         KEY_EVENTJ          = 0x0D,
     };
 
-
-
     // @brief Confirm ADP5587 replies to write_addr and read_addr with ACK 
     // @return true if both are successful, false if either fail.
     bool probe_i2c();
@@ -99,7 +99,8 @@ private:
     // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
     std::unique_ptr<I2C_TypeDef> _i2c_handle;
 
-    ExtiInterrupt* interrupt_ptr;    
+    // EXTI4_15InterruptHandler* interrupt_ptr; 
+    std::unique_ptr<EXTI4_15InterruptHandler> interrupt_ptr;   
 
     // @brief local store for ADP5587 key event registers
     std::array<uint8_t, 10> key_event_fifo {0};

@@ -20,23 +20,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <exti_4_15_interrupt_handler.hpp>
+#include <exti5_interrupt_handler.hpp>
 #include <adp5587.hpp>
 
 namespace adp5587
 {
 
-EXTI4_15InterruptHandler::EXTI4_15InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance) 
+EXTI5_InterruptHandler::EXTI5_InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance) 
 : _driver_instance (std::move(driver_instance))
 {
     // Pass the interrupt number/driver pointer up to the base class.
     std::unique_ptr<InterruptManagerBase> this_ext_interrupt = std::unique_ptr<InterruptManagerBase>(this);
     InterruptManagerBase::register_handler(
-        isr::stm32g0::InterruptManagerBase::ISRVectorTableEnums::exti4_15_irqhandler, 
+        isr::stm32g0::InterruptManagerBase::ISRVectorTableEnums::exti5_irqhandler, 
         this_ext_interrupt);
 }
 
-void EXTI4_15InterruptHandler::ISR()
+void EXTI5_InterruptHandler::ISR()
 {
     // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
     _driver_instance->process_fifo();

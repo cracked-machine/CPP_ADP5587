@@ -34,12 +34,12 @@ namespace adp5587
 class Driver;
 
 // @brief class for handling EXTI4_15 interrupts
-class EXTI4_15InterruptHandler : public isr::stm32g0::InterruptManagerBase
+class EXTI5_InterruptHandler : public isr::stm32g0::InterruptManagerBase
 {
 public:
-    // @brief Construct a new EXTI4_15InterruptHandler object
+    // @brief Construct a new EXTI5_InterruptHandler object
     // @param driver_instance The driver to call when the interrupt is triggered.
-    EXTI4_15InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance);
+    EXTI5_InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance);
 
     // @brief called by isr::stm32g0::InterruptManagerBase when registered interrupt is triggered by MCU
     virtual void ISR(void);

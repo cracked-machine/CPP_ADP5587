@@ -26,23 +26,22 @@
 namespace adp5587
 {
 
-EXTI5_InterruptHandler::EXTI5_InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance) 
+EXTI_InterruptHandler::EXTI_InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance) 
 : _driver_instance (std::move(driver_instance))
 {
-    // Pass the interrupt number/driver pointer up to the base class.
     std::unique_ptr<ISRManagerBaseSTM32G0> this_ext_interrupt = std::unique_ptr<ISRManagerBaseSTM32G0>(this);
+    // Pass the interrupt number/driver pointer up to the base class.
     ISRManagerBaseSTM32G0::register_handler(
-        isr::stm32g0::ISRManagerBaseSTM32G0::ISRVectorTableEnums::exti5_irqhandler, 
+        isr::stm32g0::ISRManagerBaseSTM32G0::InterruptList::exti5_irqhandler, 
         this_ext_interrupt);
 }
 
-void EXTI5_InterruptHandler::ISR()
+void EXTI_InterruptHandler::ISR()
 {
-    // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
-    _driver_instance->process_fifo();
-
     if (LL_EXTI_IsActiveFallingFlag_0_31(LL_EXTI_LINE_5) != RESET)
     {
+        // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
+        _driver_instance->process_fifo();
         LL_EXTI_ClearFallingFlag_0_31(LL_EXTI_LINE_5);
     }
 }

@@ -22,7 +22,7 @@
 
 #include <adp5587.hpp>
 
-// EXTI5_InterruptHandler
+// EXTI_InterruptHandler
 #include <exti5_interrupt_handler.hpp>
 
 #include <cstdint>
@@ -35,7 +35,7 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
 {
     // pass this Driver instance to the external interrupt manager as reference
     std::unique_ptr<Driver> this_driver = std::unique_ptr<Driver>(this);
-    interrupt_ptr = std::make_unique<EXTI5_InterruptHandler>(this_driver);
+    interrupt_ptr = std::make_unique<EXTI_InterruptHandler>(this_driver);
 
     // set the I2C_TypeDef pointer here
     _i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);

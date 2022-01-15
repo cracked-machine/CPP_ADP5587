@@ -38,7 +38,7 @@
 #include <memory>
 
 #include <ll_i2c_utils.hpp>
-// EXTI5_InterruptHandler
+// EXTI_InterruptHandler
 #include <exti5_interrupt_handler.hpp>
 
 namespace adp5587
@@ -46,7 +46,7 @@ namespace adp5587
 
 
 // forward declaration
-class EXTI5_InterruptHandler;
+class EXTI_InterruptHandler;
 
 class Driver
 {
@@ -96,8 +96,8 @@ private:
     // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
     std::unique_ptr<I2C_TypeDef> _i2c_handle;
 
-    // EXTI5_InterruptHandler* interrupt_ptr; 
-    std::unique_ptr<EXTI5_InterruptHandler> interrupt_ptr;   
+    // EXTI_InterruptHandler* interrupt_ptr; 
+    std::unique_ptr<EXTI_InterruptHandler> interrupt_ptr;   
 
     // @brief local store for ADP5587 key event registers
     std::array<uint8_t, 10> key_event_fifo {0};

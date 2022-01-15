@@ -30,9 +30,9 @@ EXTI5_InterruptHandler::EXTI5_InterruptHandler(std::unique_ptr<adp5587::Driver> 
 : _driver_instance (std::move(driver_instance))
 {
     // Pass the interrupt number/driver pointer up to the base class.
-    std::unique_ptr<InterruptManagerBase> this_ext_interrupt = std::unique_ptr<InterruptManagerBase>(this);
-    InterruptManagerBase::register_handler(
-        isr::stm32g0::InterruptManagerBase::ISRVectorTableEnums::exti5_irqhandler, 
+    std::unique_ptr<ISRManagerBaseSTM32G0> this_ext_interrupt = std::unique_ptr<ISRManagerBaseSTM32G0>(this);
+    ISRManagerBaseSTM32G0::register_handler(
+        isr::stm32g0::ISRManagerBaseSTM32G0::ISRVectorTableEnums::exti5_irqhandler, 
         this_ext_interrupt);
 }
 

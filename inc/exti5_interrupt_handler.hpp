@@ -23,7 +23,7 @@
 #ifndef __EXT_INTERRUPT_MANAGER_HPP__
 #define __EXT_INTERRUPT_MANAGER_HPP__
 
-#include <interrupt_manager_base.hpp>
+#include <isr_manager_base_stm32g0.hpp>
 
 #include <memory>
 
@@ -34,14 +34,14 @@ namespace adp5587
 class Driver;
 
 // @brief class for handling EXTI4_15 interrupts
-class EXTI5_InterruptHandler : public isr::stm32g0::InterruptManagerBase
+class EXTI5_InterruptHandler : public isr::stm32g0::ISRManagerBaseSTM32G0
 {
 public:
     // @brief Construct a new EXTI5_InterruptHandler object
     // @param driver_instance The driver to call when the interrupt is triggered.
     EXTI5_InterruptHandler(std::unique_ptr<adp5587::Driver> &driver_instance);
 
-    // @brief called by isr::stm32g0::InterruptManagerBase when registered interrupt is triggered by MCU
+    // @brief called by isr::stm32g0::ISRManagerBaseSTM32G0 when registered interrupt is triggered by MCU
     virtual void ISR(void);
 
 private:

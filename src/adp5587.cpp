@@ -28,6 +28,8 @@
 #include <cstdint>
 #include <cassert>
 
+
+
 namespace adp5587
 {
 
@@ -90,28 +92,45 @@ void Driver::clear_fifo_and_isr()
     write_register(Registers::INT_STAT, (IntStatusReg::KE_INT | IntStatusReg::GPI_INT | IntStatusReg::K_LCK_INT | IntStatusReg::OVR_FLOW_INT));    
 }
 
-void Driver::get_fifo_bytes()
+void Driver::read_fifo_bytes_from_hw()
 {
     // read the FIFO bytes into class member byte array
-    read_register(KeyEventReg::KEY_EVENTA, key_event_fifo.at(0));
-    read_register(KeyEventReg::KEY_EVENTB, key_event_fifo.at(1));
-    read_register(KeyEventReg::KEY_EVENTC, key_event_fifo.at(2));
-    read_register(KeyEventReg::KEY_EVENTD, key_event_fifo.at(3));
-    read_register(KeyEventReg::KEY_EVENTE, key_event_fifo.at(4));
-    read_register(KeyEventReg::KEY_EVENTF, key_event_fifo.at(5));
-    read_register(KeyEventReg::KEY_EVENTG, key_event_fifo.at(6));
-    read_register(KeyEventReg::KEY_EVENTH, key_event_fifo.at(7));
-    read_register(KeyEventReg::KEY_EVENTI, key_event_fifo.at(8));
-    read_register(KeyEventReg::KEY_EVENTJ, key_event_fifo.at(9));
 
+    uint8_t read_value {0};
+    read_register(KeyEventReg::KEY_EVENTA, read_value);
+    key_event_fifo.at(0) = static_cast<KeyPadMappings>(read_value);
 
-    //              1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16
-    //  UpperRow    131/3   141/13  151/23  161/33  171/43  181/53  191/63  201/73  132/4   142/14  152/24  162/34  172/44  182/54  192/64  202/74
-    //  LowerRow    129/1   139/11  149/21  159/31  169/41  179/51  189/61  199/71  130/2   140/12  150/22  160/32  170/42  180/52  190/62  200/72
+    read_register(KeyEventReg::KEY_EVENTB, read_value);
+    key_event_fifo.at(1) = static_cast<KeyPadMappings>(read_value);
+    
+    read_register(KeyEventReg::KEY_EVENTC, read_value);
+    key_event_fifo.at(2) = static_cast<KeyPadMappings>(read_value);
+
+    read_register(KeyEventReg::KEY_EVENTD, read_value);
+    key_event_fifo.at(3) = static_cast<KeyPadMappings>(read_value);
+
+    read_register(KeyEventReg::KEY_EVENTE, read_value);
+    key_event_fifo.at(4) = static_cast<KeyPadMappings>(read_value);
+
+    read_register(KeyEventReg::KEY_EVENTF, read_value);
+    key_event_fifo.at(5) = static_cast<KeyPadMappings>(read_value);
+
+    read_register(KeyEventReg::KEY_EVENTG, read_value);
+    key_event_fifo.at(6) = static_cast<KeyPadMappings>(read_value);
+
+    read_register(KeyEventReg::KEY_EVENTH, read_value);
+    key_event_fifo.at(7) = static_cast<KeyPadMappings>(read_value);
+
+    read_register(KeyEventReg::KEY_EVENTI, read_value);
+    key_event_fifo.at(8) = static_cast<KeyPadMappings>(read_value);
+
+    read_register(KeyEventReg::KEY_EVENTJ, read_value);
+    key_event_fifo.at(9) = static_cast<KeyPadMappings>(read_value);
+
 
 }
 
-void Driver::process_fifo()
+void Driver::update_key_events()
 {
     // check the "Key events interrupt" bit is set
     uint8_t int_stat_byte {0};
@@ -130,7 +149,7 @@ void Driver::process_fifo()
         else
         {
             // read the FIFO data (which also clears the FIFO and event counter)
-            get_fifo_bytes();
+            read_fifo_bytes_from_hw();
 
 
             // The "Key events interrupt" bit needs resetting. Write 1 to the KE_INT bit to reset it
@@ -139,6 +158,11 @@ void Driver::process_fifo()
         }
     }
 
+}
+
+void Driver::get_key_events(std::array<KeyPadMappings, 10> &key_events_list)
+{
+    key_events_list = key_event_fifo;
 }
 
 bool Driver::probe_i2c()

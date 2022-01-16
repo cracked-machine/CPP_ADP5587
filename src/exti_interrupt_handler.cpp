@@ -41,7 +41,7 @@ void EXTI_InterruptHandler::ISR()
     if (LL_EXTI_IsActiveFallingFlag_0_31(LL_EXTI_LINE_5) != RESET)
     {
         // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
-        _driver_instance->process_fifo();
+        _driver_instance->update_key_events();
         LL_EXTI_ClearFallingFlag_0_31(LL_EXTI_LINE_5);
     }
 }

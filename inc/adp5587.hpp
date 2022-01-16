@@ -39,7 +39,7 @@
 
 #include <ll_i2c_utils.hpp>
 // EXTI_InterruptHandler
-#include <exti5_interrupt_handler.hpp>
+#include <exti_interrupt_handler.hpp>
 
 namespace adp5587
 {

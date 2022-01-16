@@ -23,7 +23,7 @@
 #include <adp5587.hpp>
 
 // EXTI_InterruptHandler
-#include <exti5_interrupt_handler.hpp>
+#include <exti_interrupt_handler.hpp>
 
 #include <cstdint>
 #include <cassert>

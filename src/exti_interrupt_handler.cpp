@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <exti5_interrupt_handler.hpp>
+#include <exti_interrupt_handler.hpp>
 #include <adp5587.hpp>
 
 namespace adp5587
@@ -32,7 +32,7 @@ EXTI_InterruptHandler::EXTI_InterruptHandler(std::unique_ptr<adp5587::Driver> &d
     std::unique_ptr<ISRManagerBaseSTM32G0> this_ext_interrupt = std::unique_ptr<ISRManagerBaseSTM32G0>(this);
     // Pass the interrupt number/driver pointer up to the base class.
     ISRManagerBaseSTM32G0::register_handler(
-        isr::stm32g0::ISRManagerBaseSTM32G0::InterruptList::exti5, 
+        isr::stm32g0::ISRManagerBaseSTM32G0::InterruptType::exti5, 
         this_ext_interrupt);
 }
 

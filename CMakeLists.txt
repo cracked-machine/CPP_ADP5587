@@ -1,7 +1,7 @@
 target_sources(${BUILD_NAME} PRIVATE
     # put source files here
     src/adp5587.cpp
-    src/exti5_interrupt_handler.cpp
+    src/exti_interrupt_handler.cpp
     
 )
 

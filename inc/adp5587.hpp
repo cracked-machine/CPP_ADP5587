@@ -112,12 +112,9 @@ public:
         J7_ON=208,	J6_ON=198,	J5_ON=188,	J4_ON=178,	J3_ON=168,	J2_ON=158,	J1_ON=148,	J0_ON=138,
     };
 
-    // @brief Confirm ADP5587 replies to write_addr and read_addr with ACK 
-    // @return true if both are successful, false if either fail.
-    bool probe_i2c();
 
-    void write_config_bits(uint8_t config_bits);
-    
+
+
     
     // @brief Updates the stored key events FIFO data and resets the HW ISR
     void update_key_events();
@@ -126,21 +123,37 @@ public:
     // @param key_events_list 
     void get_key_events(std::array<KeyPadMappings, 10> &key_events_list);
 
+    // @brief Notify this driver that the stored key events data has been read and can be cleared.
+    void clear_key_events();
+
+
+
 private:
 
-    // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
-    std::unique_ptr<I2C_TypeDef> _i2c_handle;
+    // @brief The i2c slave address for ADP5587ACPZ-1-R7
+    const uint8_t m_i2c_addr {0x60};
 
-    // EXTI_InterruptHandler* interrupt_ptr; 
-    std::unique_ptr<EXTI_InterruptHandler> interrupt_ptr;   
+    // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
+    std::unique_ptr<I2C_TypeDef> m_i2c_handle;
+
+    // EXTI_InterruptHandler* m_interrupt_ptr; 
+    std::unique_ptr<EXTI_InterruptHandler> m_interrupt_ptr;   
 
     // @brief local store for ADP5587 key event FIFO
-    std::array<KeyPadMappings, 10> key_event_fifo {KeyPadMappings::INIT};
+    std::array<KeyPadMappings, 10> m_key_event_fifo {KeyPadMappings::INIT};
     
-    // @brief Read the FIFO bytes into "key_event_fifo" member byte array
+    // @brief Confirm ADP5587 replies to write_addr and read_addr with ACK 
+    // @return true if both are successful, false if either fail.
+    bool probe_i2c();
+
+    // @brief Read the FIFO bytes into "m_key_event_fifo" member byte array
     void read_fifo_bytes_from_hw();
 
+    void write_config_bits(uint8_t config_bits);
+    void clear_config_bits(uint8_t config_bits);
 
+    void enable_keypad_isr();
+    void disable_keypad_isr();
 
     enum ConfigReg
     {
@@ -188,13 +201,6 @@ private:
     // clear the Interrupt status register (INT_STAT) by writing 1 to each bit
     void clear_fifo_and_isr();
 
- 
-
-    // @brief The i2c slave address for ADP5587ACPZ-1-R7
-    const uint8_t m_i2c_addr {0x60};
-
-
-    uint8_t m_device_id {0};
 
 };
 

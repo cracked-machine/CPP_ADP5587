@@ -23,9 +23,15 @@
 #ifndef __EXTI_INTERRUPT_HANDLER_HPP__
 #define __EXTI_INTERRUPT_HANDLER_HPP__
 
-#include <isr_manager_base_stm32g0.hpp>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
+    #include "main.h"
+#pragma GCC diagnostic pop
 
+#include <isr_manager_base_stm32g0.hpp>
+#include <ll_tim_utils.hpp>
 #include <memory>
+
 
 namespace adp5587
 {
@@ -47,6 +53,9 @@ public:
 private:
     // @brief driver instance for ISR callback
     std::unique_ptr<adp5587::Driver> _driver_instance;
+
+    uint32_t m_last_debounce_reading_usecs {0};
+    static constexpr uint32_t m_debounce_threshold_usecs {50000};
 };
 
 

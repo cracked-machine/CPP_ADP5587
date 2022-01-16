@@ -37,10 +37,10 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
 {
     // pass this Driver instance to the external interrupt manager as reference
     std::unique_ptr<Driver> this_driver = std::unique_ptr<Driver>(this);
-    interrupt_ptr = std::make_unique<EXTI_InterruptHandler>(this_driver);
+    m_interrupt_ptr = std::make_unique<EXTI_InterruptHandler>(this_driver);
 
     // set the I2C_TypeDef pointer here
-    _i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
+    m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
 
 
     // check the slave device is talking
@@ -59,7 +59,7 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
     read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);    
 
     // 1) Enable keypad interrupts
-    write_config_bits(ConfigReg::KE_IEN);
+    enable_keypad_isr();
 
     // 2) Enable the keypad rows and columns 
     uint8_t kpsel_byte {0xFF};
@@ -72,6 +72,16 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
 
 
 
+}
+
+void Driver::enable_keypad_isr()
+{
+    write_config_bits(ConfigReg::KE_IEN);
+}
+
+void Driver::disable_keypad_isr()
+{
+    clear_config_bits(ConfigReg::KE_IEN);
 }
 
 void Driver::clear_fifo_and_isr()
@@ -98,40 +108,42 @@ void Driver::read_fifo_bytes_from_hw()
 
     uint8_t read_value {0};
     read_register(KeyEventReg::KEY_EVENTA, read_value);
-    key_event_fifo.at(0) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(0) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTB, read_value);
-    key_event_fifo.at(1) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(1) = static_cast<KeyPadMappings>(read_value);
     
     read_register(KeyEventReg::KEY_EVENTC, read_value);
-    key_event_fifo.at(2) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(2) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTD, read_value);
-    key_event_fifo.at(3) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(3) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTE, read_value);
-    key_event_fifo.at(4) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(4) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTF, read_value);
-    key_event_fifo.at(5) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(5) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTG, read_value);
-    key_event_fifo.at(6) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(6) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTH, read_value);
-    key_event_fifo.at(7) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(7) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTI, read_value);
-    key_event_fifo.at(8) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(8) = static_cast<KeyPadMappings>(read_value);
 
     read_register(KeyEventReg::KEY_EVENTJ, read_value);
-    key_event_fifo.at(9) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo.at(9) = static_cast<KeyPadMappings>(read_value);
 
 
 }
 
 void Driver::update_key_events()
 {
+    // disable_keypad_isr();
+
     // check the "Key events interrupt" bit is set
     uint8_t int_stat_byte {0};
     read_register(Registers::INT_STAT, int_stat_byte);
@@ -158,11 +170,17 @@ void Driver::update_key_events()
         }
     }
 
+    // enable_keypad_isr();
 }
 
 void Driver::get_key_events(std::array<KeyPadMappings, 10> &key_events_list)
 {
-    key_events_list = key_event_fifo;
+    key_events_list = m_key_event_fifo;
+}
+
+void Driver::clear_key_events()
+{
+    m_key_event_fifo.fill(KeyPadMappings::INIT);
 }
 
 bool Driver::probe_i2c()
@@ -170,7 +188,7 @@ bool Driver::probe_i2c()
 	bool success {true};
 
     // check ADP5587 is listening on 0x60 (write). Left-shift of address is *not* required.
-	if (stm32::i2c::send_addr(_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
+	if (stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
     {
         success = false;
     }
@@ -181,25 +199,33 @@ bool Driver::probe_i2c()
 void Driver::write_config_bits(uint8_t config_bits)
 { 
     write_register(Registers::CFG, config_bits);
-    uint8_t new_byte {0};
-    read_register(Registers::CFG, new_byte);
+    // maybe should read back and return bool based on comparison?
+    // uint8_t new_byte {0};
+    // read_register(Registers::CFG, new_byte);
 
+}
+
+void Driver::clear_config_bits(uint8_t config_bits)
+{
+    uint8_t existing_byte {0};
+    read_register(Registers::CFG, existing_byte);
+    write_register(Registers::CFG, (existing_byte &= ~(config_bits)));
 }
 
 void Driver::read_register(const uint8_t reg, uint8_t &rx_byte)
 {
 	// read this number of bytes
-	LL_I2C_SetTransferSize(_i2c_handle.get(), 1);
+	LL_I2C_SetTransferSize(m_i2c_handle.get(), 1);
 	
 	// send AD5587 write address and the register we want to read
-	stm32::i2c::send_addr(_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_byte(_i2c_handle, reg);
+	stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
+	stm32::i2c::send_byte(m_i2c_handle, reg);
 
 	// send AD5587 read address and get received data
-	stm32::i2c::send_addr(_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::READ);
-	stm32::i2c::receive_byte(_i2c_handle, rx_byte);
+	stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::READ);
+	stm32::i2c::receive_byte(m_i2c_handle, rx_byte);
 
-	LL_I2C_GenerateStopCondition(_i2c_handle.get());
+	LL_I2C_GenerateStopCondition(m_i2c_handle.get());
 
 	#if defined(USE_RTT) 
         switch(reg)
@@ -266,16 +292,16 @@ void Driver::write_register(const uint8_t reg, uint8_t tx_byte)
 {
 	// write this number of bytes: The data byte(s) AND the address byte
 	const uint8_t num_bytes {2};
-	LL_I2C_SetTransferSize(_i2c_handle.get(), num_bytes);
+	LL_I2C_SetTransferSize(m_i2c_handle.get(), num_bytes);
 	
 	// send AD5587 write address and the register we want to write
-	stm32::i2c::send_addr(_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_byte(_i2c_handle, reg);
+	stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
+	stm32::i2c::send_byte(m_i2c_handle, reg);
 
 	// send AD5587 read address and get received data
-	stm32::i2c::send_byte(_i2c_handle, tx_byte);
+	stm32::i2c::send_byte(m_i2c_handle, tx_byte);
 
-	LL_I2C_GenerateStopCondition(_i2c_handle.get());
+	LL_I2C_GenerateStopCondition(m_i2c_handle.get());
  
 }
 

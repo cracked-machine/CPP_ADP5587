@@ -38,8 +38,9 @@
 #include <memory>
 
 #include <ll_i2c_utils.hpp>
-// EXTI_InterruptHandler
-#include <exti_interrupt_handler.hpp>
+// exti_isr
+// #include <exti_interrupt_handler.hpp>
+
 
 namespace adp5587
 {
@@ -50,7 +51,7 @@ namespace adp5587
 
 
 // forward declaration
-class EXTI_InterruptHandler;
+class exti_isr;
 
 class Driver
 {
@@ -126,7 +127,7 @@ public:
     // @brief Notify this driver that the stored key events data has been read and can be cleared.
     void clear_key_events();
 
-
+    void  exti_isr();
 
 private:
 
@@ -136,8 +137,8 @@ private:
     // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
     std::unique_ptr<I2C_TypeDef> m_i2c_handle;
 
-    // EXTI_InterruptHandler* m_interrupt_ptr; 
-    std::unique_ptr<EXTI_InterruptHandler> m_interrupt_ptr;   
+    // exti_isr* m_interrupt_ptr; 
+    // std::unique_ptr<exti_isr> m_interrupt_ptr;   
 
     // @brief local store for ADP5587 key event FIFO
     std::array<KeyPadMappings, 10> m_key_event_fifo {KeyPadMappings::INIT};

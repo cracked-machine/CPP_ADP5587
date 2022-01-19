@@ -23,11 +23,12 @@
 #include <adp5587.hpp>
 
 // EXTI_InterruptHandler
-#include <exti_interrupt_handler.hpp>
+
+#include <stm32g0_interrupt_manager.hpp>
 
 #include <cstdint>
 #include <cassert>
-
+#include <functional>
 
 
 namespace adp5587
@@ -35,13 +36,14 @@ namespace adp5587
 
 Driver::Driver(I2C_TypeDef *i2c_handle)
 {
-    // pass this Driver instance to the external interrupt manager as reference
-    std::unique_ptr<Driver> this_driver = std::unique_ptr<Driver>(this);
-    m_interrupt_ptr = std::make_unique<EXTI_InterruptHandler>(this_driver);
+    // register the isr function with STM32G0InterruptManager
+    std::function<void()> new_exti_callback = [this](){  this->exti_isr();  };
+    stm32::isr::STM32G0InterruptManager::register_callback(
+        stm32::isr::STM32G0InterruptManager::InterruptType::exti5,
+        new_exti_callback);
 
     // set the I2C_TypeDef pointer here
     m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
-
 
     // check the slave device is talking
     probe_i2c();
@@ -70,8 +72,16 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
     write_register(Registers::KP_GPIO3, kpsel_byte);
     read_register(Registers::KP_GPIO3, kpsel_byte);   
 
+}
 
-
+void Driver::exti_isr()
+{
+    if (LL_EXTI_IsActiveFallingFlag_0_31(LL_EXTI_LINE_5) != RESET)
+    {
+        // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
+        update_key_events();
+        LL_EXTI_ClearFallingFlag_0_31(LL_EXTI_LINE_5);
+    }
 }
 
 void Driver::enable_keypad_isr()

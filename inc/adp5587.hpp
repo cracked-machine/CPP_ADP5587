@@ -38,10 +38,11 @@
 #include <memory>
 
 #include <ll_i2c_utils.hpp>
-// exti_isr
-// #include <exti_interrupt_handler.hpp>
 
+// disable dynamic allocation/copying
+#include <ControlledBase.hpp>
 
+#include <stm32g0_interrupt_manager.hpp>
 namespace adp5587
 {
 
@@ -50,10 +51,9 @@ namespace adp5587
     //  LowerRow    129/1   139/11  149/21  159/31  169/41  179/51  189/61  199/71  130/2   140/12  150/22  160/32  170/42  180/52  190/62  200/72
 
 
-// forward declaration
-class exti_isr;
 
-class Driver
+
+class Driver : public ControlledBase
 {
 public:
 
@@ -127,18 +127,40 @@ public:
     // @brief Notify this driver that the stored key events data has been read and can be cleared.
     void clear_key_events();
 
+	// @brief callback function for STM32G0InterruptManager 
+	// see stm32_interrupt_managers/inc/stm32g0_interrupt_manager_functional.hpp
     void  exti_isr();
 
 private:
+
+#ifdef USE_RAWPTR_ISR
+	struct ExtIntHandler : public stm32::isr::STM32G0InterruptManager
+	{
+        // @brief the parent driver class
+        Driver *m_parent_driver_ptr;
+		// @brief initialise and register this handler instance with STM32G0InterruptManager
+		// @param parent_driver_ptr the instance to register
+		void register_driver(Driver *parent_driver_ptr)
+		{
+			m_parent_driver_ptr = parent_driver_ptr;
+			// register pointer to this handler class in stm32::isr::STM32G0InterruptManager
+			stm32::isr::STM32G0InterruptManager::register_handler(stm32::isr::STM32G0InterruptManager::InterruptType::exti5, this);
+		}        
+        // @brief The callback used by STM32G0InterruptManager
+		virtual void ISR()
+		{
+            m_parent_driver_ptr->exti_isr();
+		}        
+	};
+	// @brief handler object
+    ExtIntHandler m_ext_int_handler;
+#endif // USE_RAWPTR_ISR
 
     // @brief The i2c slave address for ADP5587ACPZ-1-R7
     const uint8_t m_i2c_addr {0x60};
 
     // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
     std::unique_ptr<I2C_TypeDef> m_i2c_handle;
-
-    // exti_isr* m_interrupt_ptr; 
-    // std::unique_ptr<exti_isr> m_interrupt_ptr;   
 
     // @brief local store for ADP5587 key event FIFO
     std::array<KeyPadMappings, 10> m_key_event_fifo {KeyPadMappings::INIT};

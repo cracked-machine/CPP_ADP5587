@@ -24,7 +24,6 @@
 #define __ADP5587_HPP__
 
 #if defined(USE_SSD1306_HAL_DRIVER) || defined(USE_SSD1306_LL_DRIVER)
-
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wvolatile"
 		#include "main.h"
@@ -33,25 +32,13 @@
 
 #endif
 
-#include <array>
-#include <bitset>
-#include <memory>
-
-#include <ll_i2c_utils.hpp>
-
 // disable dynamic allocation/copying
 #include <ControlledBase.hpp>
-
+#include <ll_i2c_utils.hpp>
 #include <stm32g0_interrupt_manager.hpp>
+
 namespace adp5587
 {
-
-    //              1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16
-    //  UpperRow    131/3   141/13  151/23  161/33  171/43  181/53  191/63  201/73  132/4   142/14  152/24  162/34  172/44  182/54  192/64  202/74
-    //  LowerRow    129/1   139/11  149/21  159/31  169/41  179/51  189/61  199/71  130/2   140/12  150/22  160/32  170/42  180/52  190/62  200/72
-
-
-
 
 class Driver : public ControlledBase
 {
@@ -60,6 +47,8 @@ public:
     // @brief Construct a new Driver object
     Driver(I2C_TypeDef *i2c_handle);
     
+    // @brief Incomplete list of ADP5587 device registers
+    // see datasheet page 15 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
     enum Registers
     {
         DEV_ID              = 0x00,
@@ -71,6 +60,9 @@ public:
         KP_GPIO3            = 0x1F
     }; 
 
+    // @brief The 10 key event registers are set to act as a FIFO. Reading any of the 10 key event registers 
+    // yields the key events in the order the keys were pressed and released.
+    // see datasheet page 17 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
     enum KeyEventReg
     {
         KEY_EVENTA          = 0x04,
@@ -85,7 +77,9 @@ public:
         KEY_EVENTJ          = 0x0D,
     };
 
-    // Keypad press encodings. see datasheet page 9 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
+    // Keypad press encodings. These values appear in the KeyEventReg entries after key press/release events
+    // see datasheet page 9 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
+    // if you're only interested in key press events then you can just check for values above A0_ON=129
     enum class KeyPadMappings
     {
         INIT=0,
@@ -113,10 +107,6 @@ public:
         J7_ON=208,	J6_ON=198,	J5_ON=188,	J4_ON=178,	J3_ON=168,	J2_ON=158,	J1_ON=148,	J0_ON=138,
     };
 
-
-
-
-    
     // @brief Updates the stored key events FIFO data and resets the HW ISR
     void update_key_events();
 
@@ -178,34 +168,37 @@ private:
     void enable_keypad_isr();
     void disable_keypad_isr();
 
+    // @brief Configuration Register 1
     enum ConfigReg
     {
-        KE_IEN              = 0x01,
-        GPI_IEN             = 0x02,
-        K_LCK_IM            = 0x03,
-        OVR_FLOW_IEN        = 0x04,
-        INT_CFG             = 0x05,
-        OVR_FLOW_M          = 0x06,
-        GPIEM_CFG           = 0x07,
-        AUTO_INC            = 0x08,
+        KE_IEN              = 0x01, // Key events interrupt enable.
+        GPI_IEN             = 0x02, // GPI interrupt enable.
+        K_LCK_IM            = 0x03, // Keypad lock interrupt mask.
+        OVR_FLOW_IEN        = 0x04, // Overflow interrupt enable.
+        INT_CFG             = 0x05, // Interrupt configuration.
+        OVR_FLOW_M          = 0x06, // Overflow mode.
+        GPIEM_CFG           = 0x07, // GPI event mode configuration.
+        AUTO_INC            = 0x08, // 2C auto-increment. Burst read is supported; burst write is not supported.
     };
 
+    // Interrupt status register
     enum IntStatusReg
     {
-        KE_INT              = 0x01,
-        GPI_INT             = 0x02,
-        K_LCK_INT           = 0x03,
-        OVR_FLOW_INT        = 0x04,
+        KE_INT              = 0x01, // Key events interrupt status. When set, write 1 to clear.
+        GPI_INT             = 0x02, // GPI interrupt status. When set, write 1 to clear.
+        K_LCK_INT           = 0x03, // Keylock interrupt status. When set, write 1 to clear.
+        OVR_FLOW_INT        = 0x04, // Overflow interrupt status. When set, write 1 to clear.
     };
 
+    // Keylock and event counter register
     enum KeyLckEvCntReg
     {
-        KEC1                = 0x01,
+        KEC1                = 0x01, // 3-bit key event count of key event register.
         KEC2                = 0x02,
         KEC3                = 0x03,
-        LCK1                = 0x04,
+        LCK1                = 0x04, // 2-bit keypad lock status[1:0] (00 = unlocked; 11 = locked; read-only bits).
         LCK2                = 0x05,
-        K_LCK_EN            = 0x06,
+        K_LCK_EN            = 0x06, // 0: lock feature is disabled. 1: lock feature is enabled.
     };
     
     // @brief Read some bytes from the ADP5587 register
@@ -224,11 +217,8 @@ private:
     // clear the Interrupt status register (INT_STAT) by writing 1 to each bit
     void clear_fifo_and_isr();
 
-
 };
 
-
 } // namespace adp5587
-
 
 #endif // __ADP5587_HPP__

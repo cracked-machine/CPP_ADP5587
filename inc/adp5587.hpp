@@ -55,9 +55,31 @@ public:
         CFG                 = 0x01,
         INT_STAT            = 0x02,
         KEY_LCK_EC_STAT     = 0x03,
+        GPIO_INT_STAT1      = 0x11,
+        GPIO_INT_STAT2      = 0x12,
+        GPIO_INT_STAT3      = 0x13,
+        GPIO_INT_EN1        = 0x1A,
+        GPIO_INT_EN2        = 0x1B,
+        GPIO_INT_EN3        = 0x1C,
         KP_GPIO1            = 0x1D,
         KP_GPIO2            = 0x1E,
-        KP_GPIO3            = 0x1F
+        KP_GPIO3            = 0x1F,
+        GPI_EM_REG1         = 0x20,
+        GPI_EM_REG2         = 0x21,
+        GPI_EM_REG3         = 0x22,
+        GPIO_DIR1           = 0x23,
+        GPIO_DIR2           = 0x24,
+        GPIO_DIR3           = 0x25,
+        GPIO_INT_LVL1       = 0x26,
+        GPIO_INT_LVL2       = 0x27,
+        GPIO_INT_LVL3       = 0x28,
+        DEBOUNCE_DIS1       = 0x29,
+        DEBOUNCE_DIS2       = 0x30,
+        DEBOUNCE_DIS3       = 0x31,
+        GPIO_PULL1          = 0x32,
+        GPIO_PULL2          = 0x33,
+        GPIO_PULL3          = 0x34,
+
     }; 
 
     // @brief The 10 key event registers are set to act as a FIFO. Reading any of the 10 key event registers 
@@ -105,6 +127,30 @@ public:
         H7_ON=206,	H6_ON=196,	H5_ON=186,	H4_ON=176,	H3_ON=166,	H2_ON=156,	H1_ON=146,	H0_ON=136,
         I7_ON=207,	I6_ON=197,	I5_ON=187,	I4_ON=177,	I3_ON=167,	I2_ON=157,	I1_ON=147,	I0_ON=137,
         J7_ON=208,	J6_ON=198,	J5_ON=188,	J4_ON=178,	J3_ON=168,	J2_ON=158,	J1_ON=148,	J0_ON=138,
+    };
+
+    // @brief  Values for Keypad or GPIO selection registers
+    enum KP_GPIO
+    {
+        R0 = 0b00000001,
+        R1 = 0b00000010,
+        R2 = 0b00000100,
+        R3 = 0b00001000,
+        R4 = 0b00010000,
+        R5 = 0b00100000,
+        R6 = 0b01000000,
+        R7 = 0b10000000,
+
+        C0 = 0b00000001,
+        C1 = 0b00000010,
+        C2 = 0b00000100,
+        C3 = 0b00001000,
+        C4 = 0b00010000,
+        C5 = 0b00100000,
+        C6 = 0b01000000,
+        C7 = 0b10000000,
+        C8 = 0b00000001,
+        C9 = 0b00000010,
     };
 
     // @brief Updates the stored key events FIFO data and resets the HW ISR
@@ -165,8 +211,39 @@ private:
     void write_config_bits(uint8_t config_bits);
     void clear_config_bits(uint8_t config_bits);
 
+    // @brief global enable keypad interrupts
     void enable_keypad_isr();
+
+    // @brief global disable keypad interrupts
     void disable_keypad_isr();
+
+    // @brief global enable GPIO interrupts
+    void enable_gpio_isr();
+
+    // @brief global disable GPIO interrupts
+    void disable_gpio_isr();
+
+    // @brief Select inidividual row/col as keypad input. Omitted connections will be configured as GPI.
+    void keypad_gpio_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Select if GPI is included in event FIFO
+    void gpio_fifo_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Enable GPI interrupts on inidividual row/col
+    void gpio_interrupt_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Set the GPIO direction as output on indiviudal rows/cols
+    void set_gpo_out(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Set the GPIO lvl as active high on indiviudal rows/cols
+    void set_gpi_active_high(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Disable the GPIO debounce on indiviudal rows/cols
+    void disable_debounce(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Disable the GPIO pullup on indiviudal rows/cols
+    void disable_gpio_pullup(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
 
     // @brief Configuration Register 1
     enum ConfigReg

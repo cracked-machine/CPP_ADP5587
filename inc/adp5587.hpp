@@ -33,14 +33,14 @@
 #endif
 
 // disable dynamic allocation/copying
-#include <ControlledBase.hpp>
+#include <allocation_restricted_base.hpp>
 #include <ll_i2c_utils.hpp>
 #include <stm32g0_interrupt_manager.hpp>
 
 namespace adp5587
 {
 
-class Driver : public ControlledBase
+class Driver : public AllocationRestrictedBase
 {
 public:
 
@@ -55,9 +55,20 @@ public:
         CFG                 = 0x01,
         INT_STAT            = 0x02,
         KEY_LCK_EC_STAT     = 0x03,
+        KEY_EVENTA          = 0x04,
+        KEY_EVENTB          = 0x05,
+        KEY_EVENTC          = 0x06,
+        KEY_EVENTD          = 0x07,
+        KEY_EVENTE          = 0x08,
+        KEY_EVENTF          = 0x09,
+        KEY_EVENTG          = 0x0A,
+        KEY_EVENTH          = 0x0B,
+        KEY_EVENTI          = 0x0C,
+        KEY_EVENTJ          = 0x0D,
         GPIO_INT_STAT1      = 0x11,
         GPIO_INT_STAT2      = 0x12,
         GPIO_INT_STAT3      = 0x13,
+        
         GPIO_INT_EN1        = 0x1A,
         GPIO_INT_EN2        = 0x1B,
         GPIO_INT_EN3        = 0x1C,
@@ -82,22 +93,7 @@ public:
 
     }; 
 
-    // @brief The 10 key event registers are set to act as a FIFO. Reading any of the 10 key event registers 
-    // yields the key events in the order the keys were pressed and released.
-    // see datasheet page 17 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
-    enum KeyEventReg
-    {
-        KEY_EVENTA          = 0x04,
-        KEY_EVENTB          = 0x05,
-        KEY_EVENTC          = 0x06,
-        KEY_EVENTD          = 0x07,
-        KEY_EVENTE          = 0x08,
-        KEY_EVENTF          = 0x09,
-        KEY_EVENTG          = 0x0A,
-        KEY_EVENTH          = 0x0B,
-        KEY_EVENTI          = 0x0C,
-        KEY_EVENTJ          = 0x0D,
-    };
+
 
     // Keypad press encodings. These values appear in the KeyEventReg entries after key press/release events
     // see datasheet page 9 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
@@ -153,12 +149,50 @@ public:
         C9 = 0b00000010,
     };
 
-    // @brief Updates the stored key events FIFO data and resets the HW ISR
-    void update_key_events();
+    // @brief global enable keypad interrupts
+    void enable_keypad_isr();
+
+    // @brief global disable keypad interrupts
+    void disable_keypad_isr();
+
+    // @brief global enable GPIO interrupts
+    void enable_gpio_isr();
+
+    // @brief global disable GPIO interrupts
+    void disable_gpio_isr();
+
+    // @brief Select inidividual row/col connections as keypad input. Omitted connections will be configured as GPI.
+    void keypad_gpio_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Select if GPI is included in event FIFO
+    void gpio_fifo_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Enable GPI interrupts on inidividual row/col
+    void gpio_interrupt_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Set the GPIO direction as output on indiviudal rows/cols
+    void set_gpo_out(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Set the GPIO lvl as active high on indiviudal rows/cols
+    void set_gpi_active_high(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Disable the GPIO debounce on indiviudal rows/cols
+    void disable_debounce(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
+
+    // @brief Disable the GPIO pullup on indiviudal rows/cols
+    void disable_gpio_pullup(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
 
     // @brief Get the list of key events (last 10)
     // @param key_events_list 
     void get_key_events(std::array<KeyPadMappings, 10> &key_events_list);
+
+
+
+private:
+
+
+    // @brief Updates the stored key events FIFO data and resets the HW ISR
+    void update_key_events();
 
     // @brief Notify this driver that the stored key events data has been read and can be cleared.
     void clear_key_events();
@@ -166,8 +200,6 @@ public:
 	// @brief callback function for STM32G0InterruptManager 
 	// see stm32_interrupt_managers/inc/stm32g0_interrupt_manager_functional.hpp
     void  exti_isr();
-
-private:
 
 #ifdef USE_RAWPTR_ISR
 	struct ExtIntHandler : public stm32::isr::STM32G0InterruptManager
@@ -211,71 +243,41 @@ private:
     void write_config_bits(uint8_t config_bits);
     void clear_config_bits(uint8_t config_bits);
 
-    // @brief global enable keypad interrupts
-    void enable_keypad_isr();
 
-    // @brief global disable keypad interrupts
-    void disable_keypad_isr();
-
-    // @brief global enable GPIO interrupts
-    void enable_gpio_isr();
-
-    // @brief global disable GPIO interrupts
-    void disable_gpio_isr();
-
-    // @brief Select inidividual row/col as keypad input. Omitted connections will be configured as GPI.
-    void keypad_gpio_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-    // @brief Select if GPI is included in event FIFO
-    void gpio_fifo_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-    // @brief Enable GPI interrupts on inidividual row/col
-    void gpio_interrupt_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-    // @brief Set the GPIO direction as output on indiviudal rows/cols
-    void set_gpo_out(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-    // @brief Set the GPIO lvl as active high on indiviudal rows/cols
-    void set_gpi_active_high(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-    // @brief Disable the GPIO debounce on indiviudal rows/cols
-    void disable_debounce(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-    // @brief Disable the GPIO pullup on indiviudal rows/cols
-    void disable_gpio_pullup(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
 
 
     // @brief Configuration Register 1
     enum ConfigReg
     {
-        KE_IEN              = 0x01, // Key events interrupt enable.
-        GPI_IEN             = 0x02, // GPI interrupt enable.
-        K_LCK_IM            = 0x03, // Keypad lock interrupt mask.
-        OVR_FLOW_IEN        = 0x04, // Overflow interrupt enable.
-        INT_CFG             = 0x05, // Interrupt configuration.
-        OVR_FLOW_M          = 0x06, // Overflow mode.
-        GPIEM_CFG           = 0x07, // GPI event mode configuration.
-        AUTO_INC            = 0x08, // 2C auto-increment. Burst read is supported; burst write is not supported.
+        KE_IEN              = (1 << 0), // Key events interrupt enable.
+        GPI_IEN             = (1 << 1), // GPI interrupt enable.
+        K_LCK_IM            = (1 << 2), // Keypad lock interrupt mask.
+        OVR_FLOW_IEN        = (1 << 3), // Overflow interrupt enable.
+        INT_CFG             = (1 << 4), // Interrupt configuration.
+        OVR_FLOW_M          = (1 << 5), // Overflow mode.
+        GPIEM_CFG           = (1 << 6), // GPI event mode configuration.
+        AUTO_INC            = (1 << 7), // 2C auto-increment. Burst read is supported; burst write is not supported.
     };
 
     // Interrupt status register
     enum IntStatusReg
     {
-        KE_INT              = 0x01, // Key events interrupt status. When set, write 1 to clear.
-        GPI_INT             = 0x02, // GPI interrupt status. When set, write 1 to clear.
-        K_LCK_INT           = 0x03, // Keylock interrupt status. When set, write 1 to clear.
-        OVR_FLOW_INT        = 0x04, // Overflow interrupt status. When set, write 1 to clear.
+        KE_INT              = (1 << 0), // Key events interrupt status. When set, write 1 to clear.
+        GPI_INT             = (1 << 1), // GPI interrupt status. When set, write 1 to clear.
+        K_LCK_INT           = (1 << 2), // Keylock interrupt status. When set, write 1 to clear.
+        OVR_FLOW_INT        = (1 << 3), // Overflow interrupt status. When set, write 1 to clear.
     };
 
     // Keylock and event counter register
     enum KeyLckEvCntReg
     {
-        KEC1                = 0x01, // 3-bit key event count of key event register.
-        KEC2                = 0x02,
-        KEC3                = 0x03,
-        LCK1                = 0x04, // 2-bit keypad lock status[1:0] (00 = unlocked; 11 = locked; read-only bits).
-        LCK2                = 0x05,
-        K_LCK_EN            = 0x06, // 0: lock feature is disabled. 1: lock feature is enabled.
+        KEC1                = (1 << 0), // 3-bit key event count of key event register.
+        KEC2                = (1 << 1),
+        KEC3                = (1 << 2),
+        KEC4                = (1 << 3),
+        LCK1                = (1 << 4), // 2-bit keypad lock status[1:0] (00 = unlocked; 11 = locked; read-only bits).
+        LCK2                = (1 << 5),
+        K_LCK_EN            = (1 << 6), // 0: lock feature is disabled. 1: lock feature is enabled.
     };
     
     // @brief Read some bytes from the ADP5587 register

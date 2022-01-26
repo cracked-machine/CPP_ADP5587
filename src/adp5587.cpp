@@ -32,6 +32,10 @@ namespace adp5587
 
 Driver::Driver(I2C_TypeDef *i2c_handle)
 {
+
+    // set the I2C_TypeDef pointer here
+    m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
+
     // register the interrupt with STM32G0InterruptManager
     #ifdef USE_RAWPTR_ISR
         m_ext_int_handler.register_driver(this);
@@ -43,40 +47,18 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
             new_exti_callback);
     #endif
 
-    // set the I2C_TypeDef pointer here
-    m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
-
     // check the slave device is talking
     probe_i2c();
 
-    // check the POR state of the "Interrupt status" and "Keylock and event counter" register
-    uint8_t int_stat_byte {0};
-    uint8_t key_lck_ec_stat_byte {0};
-    read_register(Registers::INT_STAT, int_stat_byte);
-    read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);
-
+    // clear the registers in case of POR
+    write_register(Registers::CFG, 0x00);
     clear_fifo_and_isr();
-    
-    // check they have been reset
-    read_register(Registers::INT_STAT, int_stat_byte);
-    read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);    
 
-    // 1) Enable keypad interrupts
-    enable_keypad_isr();
-    enable_gpio_isr();
-
-    // 2) Enable the keypad rows and columns 
-    // uint8_t kpsel_byte {0xFF};
-    keypad_gpio_select(
-        KP_GPIO::R0 | KP_GPIO::R1 | KP_GPIO::R2 | KP_GPIO::R3 | KP_GPIO::R4 | KP_GPIO::R5 | KP_GPIO::R6 | KP_GPIO::R7, 
-        KP_GPIO::C0 | KP_GPIO::C1 | KP_GPIO::C2 | KP_GPIO::C3,
-        0x00);
-
-    gpio_interrupt_select(
-        0x00,
-        0x00,
-        KP_GPIO::C8 | KP_GPIO::C9);
-
+    // check they have been reset. keep for debugging.
+    // uint8_t int_stat_byte {0};
+    // uint8_t key_lck_ec_stat_byte {0};
+    // read_register(Registers::INT_STAT, int_stat_byte);
+    // read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);    
 
 }
 
@@ -93,8 +75,82 @@ void Driver::exti_isr()
         read_register(Registers::INT_STAT, read_value);
         read_register(Registers::KEY_LCK_EC_STAT, read_value);
     }
+}
 
 
+void Driver::update_key_events()
+{
+    // Steps for Key interrupt events
+    // 1. Check the specific type of interrupt in the Interrupt Status regsister (INT_STAT)
+    // 2. Check if there is event data in the FIFO by reading the event counter (KEY_LCK_EC_STAT:KEC[0:3])
+    // 3. Read (and implicitly clear the data) in the FIFO
+    // 4. Reset the interrupt statuses in Interrupt Status regsister (INT_STAT)
+
+    // 1. check if the INT_STAT bits are set
+    uint8_t int_stat_byte {0};
+    read_register(Registers::INT_STAT, int_stat_byte);
+
+    // if the ADP5587 interrupt register shows key or gpio event we need to process and reset the registers
+    if ((int_stat_byte & IntStatusReg::KE_INT) == IntStatusReg::KE_INT)
+    {
+        // 2. non-zero event counter means there is FIFO data to read (which also clears the FIFO)
+        uint8_t key_lck_ec_stat_byte {0};
+        read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);
+        if ((key_lck_ec_stat_byte & (KeyLckEvCntReg::KEC1 | KeyLckEvCntReg::KEC2 | KeyLckEvCntReg::KEC3 | KeyLckEvCntReg::KEC4)) > 0)
+        {
+            // 3. read the FIFO data (which also clears the FIFO and event counter)
+            read_fifo_bytes_from_hw();
+
+        }
+        // 4. Make sure we clear the interrupt status (by writing 1). Interrupts are blocked until the register is cleared.
+        write_register(Registers::INT_STAT, IntStatusReg::KE_INT);        
+    }
+
+    // Steps for GPI interrupt events
+    // 1. Check the specific type of interrupt in the Interrupt Status regsister (INT_STAT)
+    // 2. Check if GPIO events were configured to be sent to key event FIFO (GPI_EM_REG1, GPI_EM_REG2, GPI_EM_REG3)
+    //    If so, read (and implicitly clear the data) in the FIFO
+    // 3. Read (and implicitly clear the GPI interrupt data) in GPIO_INT_STAT1, GPIO_INT_STAT2, GPIO_INT_STAT3
+    // 4. The Interrupt Status regsister (INT_STAT) can now be reset
+
+    // 1. confirm GPIO interrupt status
+    if ((int_stat_byte & IntStatusReg::GPI_INT) == IntStatusReg::GPI_INT) 
+    {
+
+        // 2. if we enabled GPI interrupts in the event FIFO then we must read the event FIFO to clear that data
+        uint8_t read_gpi_em1_value{0};
+        uint8_t read_gpi_em2_value{0};
+        uint8_t read_gpi_em3_value{0};
+        read_register(Registers::GPI_EM_REG1, read_gpi_em1_value);
+        read_register(Registers::GPI_EM_REG2, read_gpi_em2_value);
+        read_register(Registers::GPI_EM_REG3, read_gpi_em3_value);                
+
+        if ((read_gpi_em1_value | read_gpi_em2_value | read_gpi_em3_value) > 0)
+        {
+            read_fifo_bytes_from_hw();
+        }
+
+        // 3. We need to clear the GPI Interrupt Status before we can continue,
+        // Datasheet says read twice to clear but they can be stubborn so keep reading (usually 10x) until they clear.
+        uint8_t gpio_int_stat1_value{0};
+        uint8_t gpio_int_stat2_value{0};
+        uint8_t gpio_int_stat3_value{0};
+        read_register(Registers::GPIO_INT_STAT1, gpio_int_stat1_value);
+        read_register(Registers::GPIO_INT_STAT2, gpio_int_stat2_value);
+        read_register(Registers::GPIO_INT_STAT3, gpio_int_stat3_value);
+        while((gpio_int_stat1_value | gpio_int_stat2_value | gpio_int_stat3_value) > 0)
+        {
+            read_register(Registers::GPIO_INT_STAT1, gpio_int_stat1_value);
+            read_register(Registers::GPIO_INT_STAT2, gpio_int_stat2_value);        
+            read_register(Registers::GPIO_INT_STAT3, gpio_int_stat3_value);
+        }
+        
+        // 4. now we have cleared the cause of the interrupt, 
+        // we can clear the GPI_INT bit in the shared Interrupt Status Register.
+        uint8_t int_stat_value{0};
+        write_register(Registers::INT_STAT, IntStatusReg::GPI_INT); 
+        read_register(Registers::INT_STAT, int_stat_value);
+    }
 }
 
 void Driver::gpio_fifo_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9)
@@ -118,7 +174,6 @@ void Driver::gpio_interrupt_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_
     write_register(Registers::GPIO_INT_EN3, col_mask8_9);    
 }
 
-// @brief Set the GPIO direction as output on indiviudal rows/cols
 void Driver::set_gpo_out(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9)
 {
     write_register(Registers::GPIO_DIR1, row_mask);
@@ -126,7 +181,6 @@ void Driver::set_gpo_out(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask
     write_register(Registers::GPIO_DIR3, col_mask8_9);     
 }
 
-// @brief Set the GPIO lvl as active high on indiviudal rows/cols
 void Driver::set_gpi_active_high(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9)
 {
     write_register(Registers::GPIO_INT_LVL1, row_mask);
@@ -134,7 +188,6 @@ void Driver::set_gpi_active_high(uint8_t row_mask, uint8_t col_mask0_7, uint8_t 
     write_register(Registers::GPIO_INT_LVL3, col_mask8_9);     
 }
 
-// @brief Disable the GPIO debounce on indiviudal rows/cols
 void Driver::disable_debounce(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9)
 {
     write_register(Registers::DEBOUNCE_DIS1, row_mask);
@@ -142,7 +195,6 @@ void Driver::disable_debounce(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col
     write_register(Registers::DEBOUNCE_DIS3, col_mask8_9);     
 }
 
-// @brief Disable the GPIO pullup on indiviudal rows/cols
 void Driver::disable_gpio_pullup(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9)
 {
     write_register(Registers::GPIO_PULL1, row_mask);
@@ -150,12 +202,9 @@ void Driver::disable_gpio_pullup(uint8_t row_mask, uint8_t col_mask0_7, uint8_t 
     write_register(Registers::GPIO_PULL3, col_mask8_9);     
 }
 
-
-
-
 void Driver::enable_keypad_isr()
 {
-    write_config_bits(ConfigReg::KE_IEN);
+    write_config_bits((ConfigReg::KE_IEN));
 }
 
 void Driver::disable_keypad_isr()
@@ -177,15 +226,15 @@ void Driver::clear_fifo_and_isr()
 {
     // clear the key event FIFO by reading each register
     uint8_t ke_byte {0};
-    read_register(KeyEventReg::KEY_EVENTA, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTB, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTC, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTD, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTE, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTF, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTG, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTH, ke_byte);
-    read_register(KeyEventReg::KEY_EVENTI, ke_byte);    
+    read_register(Registers::KEY_EVENTA, ke_byte);
+    read_register(Registers::KEY_EVENTB, ke_byte);
+    read_register(Registers::KEY_EVENTC, ke_byte);
+    read_register(Registers::KEY_EVENTD, ke_byte);
+    read_register(Registers::KEY_EVENTE, ke_byte);
+    read_register(Registers::KEY_EVENTF, ke_byte);
+    read_register(Registers::KEY_EVENTG, ke_byte);
+    read_register(Registers::KEY_EVENTH, ke_byte);
+    read_register(Registers::KEY_EVENTI, ke_byte);    
 
     // clear all interrupts
     write_register(Registers::INT_STAT, (IntStatusReg::KE_INT | IntStatusReg::GPI_INT | IntStatusReg::K_LCK_INT | IntStatusReg::OVR_FLOW_INT));    
@@ -196,99 +245,35 @@ void Driver::read_fifo_bytes_from_hw()
     // read the FIFO bytes into class member byte array
 
     uint8_t read_value {0};
-    read_register(KeyEventReg::KEY_EVENTA, read_value);
+    read_register(Registers::KEY_EVENTA, read_value);
     m_key_event_fifo.at(0) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTB, read_value);
+    read_register(Registers::KEY_EVENTB, read_value);
     m_key_event_fifo.at(1) = static_cast<KeyPadMappings>(read_value);
     
-    read_register(KeyEventReg::KEY_EVENTC, read_value);
+    read_register(Registers::KEY_EVENTC, read_value);
     m_key_event_fifo.at(2) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTD, read_value);
+    read_register(Registers::KEY_EVENTD, read_value);
     m_key_event_fifo.at(3) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTE, read_value);
+    read_register(Registers::KEY_EVENTE, read_value);
     m_key_event_fifo.at(4) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTF, read_value);
+    read_register(Registers::KEY_EVENTF, read_value);
     m_key_event_fifo.at(5) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTG, read_value);
+    read_register(Registers::KEY_EVENTG, read_value);
     m_key_event_fifo.at(6) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTH, read_value);
+    read_register(Registers::KEY_EVENTH, read_value);
     m_key_event_fifo.at(7) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTI, read_value);
+    read_register(Registers::KEY_EVENTI, read_value);
     m_key_event_fifo.at(8) = static_cast<KeyPadMappings>(read_value);
 
-    read_register(KeyEventReg::KEY_EVENTJ, read_value);
+    read_register(Registers::KEY_EVENTJ, read_value);
     m_key_event_fifo.at(9) = static_cast<KeyPadMappings>(read_value);
-
-
-}
-
-void Driver::update_key_events()
-{
-    // Steps for Key interrupt events
-    // 1. Check the specific type of interrupt in the Interrupt Status regsister (INT_STAT)
-    // 2. Check if there is event data in the FIFO by reading the event counter (KEY_LCK_EC_STAT:KEC[0:3])
-    // 3. Read (and implicitly clear the data) in the FIFO
-    // 4. Reset the interrupt statuses in Interrupt Status regsister (INT_STAT)
-
-    // 1. check if the INT_STAT bits are set
-    uint8_t int_stat_byte {0};
-    read_register(Registers::INT_STAT, int_stat_byte);
-
-    // if the ADP5587 interrupt register shows key or gpio event we need to process and reset the registers
-    if ((int_stat_byte & IntStatusReg::KE_INT) == IntStatusReg::KE_INT)
-    {
-        // 2. non-zero event counter means there is FIFO data to read (which also clears the FIFO)
-        uint8_t key_lck_ec_stat_byte {0};
-        read_register(Registers::KEY_LCK_EC_STAT, key_lck_ec_stat_byte);
-        if ((key_lck_ec_stat_byte & (KeyLckEvCntReg::KEC1 | KeyLckEvCntReg::KEC2 | KeyLckEvCntReg::KEC3)) > 0)
-        {
-            // 3. read the FIFO data (which also clears the FIFO and event counter)
-            read_fifo_bytes_from_hw();
-
-        }
-        // 4. Make sure we clear the interrupt status (by writing 1). Interrupts are blocked until the register is cleared.
-        write_register(Registers::INT_STAT, IntStatusReg::KE_INT);        
-    }
-
-    // Steps for GPI interrupt events
-    // 1. Check the specific type of interrupt in the Interrupt Status regsister (INT_STAT)
-    // 2. Check if GPIO events were configured to be sent to key event FIFO (GPI_EM_REG1, GPI_EM_REG2, GPI_EM_REG3)
-    //    If so, read (and implicitly clear the data) in the FIFO
-    // 3. Read (and implicitly clear the data) in the GPIO_INT_STAT1, GPIO_INT_STAT2, GPIO_INT_STAT3
-    // 4. The Interrupt Status regsister (INT_STAT) can now be reset
-
-    // 1. confirm GPIO interrupt status
-    if ((int_stat_byte & IntStatusReg::GPI_INT) == IntStatusReg::GPI_INT) 
-    {
-        uint8_t read_gpi_em1_value{0};
-        uint8_t read_gpi_em2_value{0};
-        uint8_t read_gpi_em3_value{0};
-        read_register(Registers::GPI_EM_REG1, read_gpi_em1_value);
-        read_register(Registers::GPI_EM_REG2, read_gpi_em2_value);
-        read_register(Registers::GPI_EM_REG3, read_gpi_em3_value);                
-
-        // if ((read_gpi_em1_value | read_gpi_em2_value | read_gpi_em3_value) > 0)
-        // {
-        //     read_fifo_bytes_from_hw();
-        // }
-
-        uint8_t read_value{0};
-        read_register(Registers::GPIO_INT_STAT1, read_value);
-        read_register(Registers::GPIO_INT_STAT2, read_value);
-        read_register(Registers::GPIO_INT_STAT3, read_value);
-
-        read_register(Registers::INT_STAT, read_value);
-        write_register(Registers::INT_STAT, IntStatusReg::GPI_INT); 
-        write_register(Registers::INT_STAT, IntStatusReg::GPI_INT); 
-        read_register(Registers::INT_STAT, read_value);
-    }
 
 
 }
@@ -322,8 +307,8 @@ void Driver::write_config_bits(uint8_t config_bits)
     read_register(Registers::CFG, existing_byte);    
     write_register(Registers::CFG, existing_byte | config_bits);
     // maybe should read back and return bool based on comparison?
-    // uint8_t new_byte {0};
-    // read_register(Registers::CFG, new_byte);
+    uint8_t new_byte {0};
+    read_register(Registers::CFG, new_byte);
 
 }
 

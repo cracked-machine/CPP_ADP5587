@@ -201,7 +201,6 @@ private:
 	// see stm32_interrupt_managers/inc/stm32g0_interrupt_manager_functional.hpp
     void  exti_isr();
 
-#ifdef USE_RAWPTR_ISR
 	struct ExtIntHandler : public stm32::isr::STM32G0InterruptManager
 	{
         // @brief the parent driver class
@@ -222,7 +221,7 @@ private:
 	};
 	// @brief handler object
     ExtIntHandler m_ext_int_handler;
-#endif // USE_RAWPTR_ISR
+
 
     // @brief The i2c slave address for ADP5587ACPZ-1-R7
     const uint8_t m_i2c_addr {0x60};

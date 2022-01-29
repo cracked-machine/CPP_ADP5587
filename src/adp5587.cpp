@@ -37,15 +37,7 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
     m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
 
     // register the interrupt with STM32G0InterruptManager
-    #ifdef USE_RAWPTR_ISR
-        m_ext_int_handler.register_driver(this);
-    #endif
-    #ifdef USE_FUNCTIONAL_ISR
-        std::function<void()> new_exti_callback = [this](){  exti_isr();  };
-        stm32::isr::STM32G0InterruptManager::register_callback(
-            stm32::isr::STM32G0InterruptManager::InterruptType::exti5,
-            new_exti_callback);
-    #endif
+    m_ext_int_handler.register_driver(this);
 
     // check the slave device is talking
     probe_i2c();

@@ -23,7 +23,8 @@
 #ifndef __ADP5587_HPP__
 #define __ADP5587_HPP__
 
-#if defined(USE_SSD1306_HAL_DRIVER) || defined(USE_SSD1306_LL_DRIVER)
+#if defined(X86_UNIT_TESTING_ONLY)
+#else
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wvolatile"
 		#include "main.h"

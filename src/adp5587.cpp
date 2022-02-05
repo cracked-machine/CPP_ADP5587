@@ -24,8 +24,6 @@
 
 #include <cstdint>
 #include <cassert>
-#include <functional>
-
 
 namespace adp5587
 {

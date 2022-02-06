@@ -54,6 +54,7 @@ Driver::Driver(I2C_TypeDef *i2c_handle)
 
 void Driver::exti_isr()
 {
+#if not defined(X86_UNIT_TESTING_ONLY)
     if (LL_EXTI_IsActiveFallingFlag_0_31(LL_EXTI_LINE_5) != RESET)
     {
         // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
@@ -66,6 +67,7 @@ void Driver::exti_isr()
         // read_register(Registers::INT_STAT, read_value);
         // read_register(Registers::KEY_LCK_EC_STAT, read_value);
     }
+#endif
 }
 
 
@@ -310,8 +312,9 @@ void Driver::clear_config_bits(uint8_t config_bits)
     write_register(Registers::CFG, (existing_byte &= ~(config_bits)));
 }
 
-void Driver::read_register(const uint8_t reg, uint8_t &rx_byte)
+void Driver::read_register(const uint8_t reg [[maybe_unused]], uint8_t &rx_byte [[maybe_unused]])
 {
+#if not defined(X86_UNIT_TESTING_ONLY)
 	// read this number of bytes
 	LL_I2C_SetTransferSize(m_i2c_handle.get(), 1);
 	
@@ -399,12 +402,14 @@ void Driver::read_register(const uint8_t reg, uint8_t &rx_byte)
                 break;                                              
         }
 		
-	#endif		    
+	#endif	
+#endif	    
 }
 
 
-void Driver::write_register(const uint8_t reg, uint8_t tx_byte)
+void Driver::write_register(const uint8_t reg [[maybe_unused]], uint8_t tx_byte [[maybe_unused]])
 {
+#if not defined(X86_UNIT_TESTING_ONLY)
 	// write this number of bytes: The data byte(s) AND the address byte
 	const uint8_t num_bytes {2};
 	LL_I2C_SetTransferSize(m_i2c_handle.get(), num_bytes);
@@ -417,7 +422,7 @@ void Driver::write_register(const uint8_t reg, uint8_t tx_byte)
 	stm32::i2c::send_byte(m_i2c_handle, tx_byte);
 
 	LL_I2C_GenerateStopCondition(m_i2c_handle.get());
- 
+#endif
 }
 
 

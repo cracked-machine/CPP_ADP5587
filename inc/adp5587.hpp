@@ -126,6 +126,15 @@ public:
         J7_ON=208,	J6_ON=198,	J5_ON=188,	J4_ON=178,	J3_ON=168,	J2_ON=158,	J1_ON=148,	J0_ON=138,
     };
 
+    enum class GPIKeyMappings
+    {
+        // these default to key release events
+        R0=97, R1=98, R2=99, R3=100, R4=101, R5=102, R6=103, R7=104,
+        C0=105,C1=106,C2=107,C3=108, C4=109, C5=110, C6=111, C7=112, C8=113, C9=114,
+        // this bit will be set if the key was pressed
+        ON=128,     
+    };
+
     // @brief  Values for Keypad or GPIO selection registers
     enum KP_GPIO
     {

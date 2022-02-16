@@ -96,13 +96,14 @@ public:
 
 
 
-    // Keypad press encodings. These values appear in the KeyEventReg entries after key press/release events
+    // Keypad release encodings. These values appear in the KeyEventReg entries after key press/release events
     // see datasheet page 9 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
-    // if you're only interested in key press events then you can just check for values above A0_ON=129
+    // To get Key press events IDs, bitwise-OR the KeyPadMappings::XX_OFF values with KeyPadMappings::ON .
+    // See the templated overload operator function below.
     enum class KeyPadMappings
     {
         INIT=0,
-
+        // these default to key release events
         A7_OFF=71,	A6_OFF=61,	A5_OFF=51,	A4_OFF=41,	A3_OFF=31,	A2_OFF=21,	A1_OFF=11,	A0_OFF=1,
         B7_OFF=72,	B6_OFF=62,	B5_OFF=52,	B4_OFF=42,	B3_OFF=32,	B2_OFF=22,	B1_OFF=12,	B0_OFF=2,
         C7_OFF=73,	C6_OFF=63,	C5_OFF=53,	C4_OFF=43,	C3_OFF=33,	C2_OFF=23,	C1_OFF=13,	C0_OFF=3,
@@ -113,17 +114,8 @@ public:
         H7_OFF=78,	H6_OFF=68,	H5_OFF=58,	H4_OFF=48,	H3_OFF=38,	H2_OFF=28,	H1_OFF=18,	H0_OFF=8,
         I7_OFF=79,	I6_OFF=69,	I5_OFF=59,	I4_OFF=49,	I3_OFF=39,	I2_OFF=29,	I1_OFF=19,	I0_OFF=9,
         J7_OFF=80,	J6_OFF=70,	J5_OFF=60,	J4_OFF=50,	J3_OFF=40,	J2_OFF=30,	J1_OFF=20,	J0_OFF=10, 
-
-        A7_ON=199,	A6_ON=189,	A5_ON=179,	A4_ON=169,	A3_ON=159,	A2_ON=149,	A1_ON=139,	A0_ON=129,
-        B7_ON=200,	B6_ON=190,	B5_ON=180,	B4_ON=170,	B3_ON=160,	B2_ON=150,	B1_ON=140,	B0_ON=130,
-        C7_ON=201,	C6_ON=191,	C5_ON=181,	C4_ON=171,	C3_ON=161,	C2_ON=151,	C1_ON=141,	C0_ON=131,
-        D7_ON=202,	D6_ON=192,	D5_ON=182,	D4_ON=172,	D3_ON=162,	D2_ON=152,	D1_ON=142,	D0_ON=132,
-        E7_ON=203,	E6_ON=193,	E5_ON=183,	E4_ON=173,	E3_ON=163,	E2_ON=153,	E1_ON=143,	E0_ON=133,
-        F7_ON=204,	F6_ON=194,	F5_ON=184,	F4_ON=174,	F3_ON=164,	F2_ON=154,	F1_ON=144,	F0_ON=134,
-        G7_ON=205,	G6_ON=195,	G5_ON=185,	G4_ON=175,	G3_ON=165,	G2_ON=155,	G1_ON=145,	G0_ON=135,
-        H7_ON=206,	H6_ON=196,	H5_ON=186,	H4_ON=176,	H3_ON=166,	H2_ON=156,	H1_ON=146,	H0_ON=136,
-        I7_ON=207,	I6_ON=197,	I5_ON=187,	I4_ON=177,	I3_ON=167,	I2_ON=157,	I1_ON=147,	I0_ON=137,
-        J7_ON=208,	J6_ON=198,	J5_ON=188,	J4_ON=178,	J3_ON=168,	J2_ON=158,	J1_ON=148,	J0_ON=138,
+        // this bit will be set if the key was pressed
+        ON=128,
     };
 
     enum class GPIKeyMappings
@@ -134,6 +126,18 @@ public:
         // this bit will be set if the key was pressed
         ON=128,     
     };
+
+    // @brief Bitwise-OR two scoped enum literals together
+    // @tparam SCOPED_ENUM The scoped enum type.
+    // @param L The left literal operand
+    // @param R The right literal operand
+    // @return constexpr SCOPED_ENUM Returns the combined value as SCOPED_ENUM enum type
+    template<typename SCOPED_ENUM>
+    constexpr friend SCOPED_ENUM operator | (SCOPED_ENUM L, SCOPED_ENUM R) 
+    { 
+        return static_cast<SCOPED_ENUM>(static_cast<int>(L) | static_cast<int>(R));
+    }
+
 
     // @brief  Values for Keypad or GPIO selection registers
     enum KP_GPIO

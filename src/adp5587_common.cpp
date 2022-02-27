@@ -163,96 +163,96 @@ void CommonFunctions::clear_fifo_and_isr()
 
 void CommonFunctions::read_register(const uint8_t reg [[maybe_unused]], uint8_t &rx_byte [[maybe_unused]])
 {
-#if not defined(X86_UNIT_TESTING_ONLY)
-	// read this number of bytes
-	LL_I2C_SetTransferSize(m_i2c_handle.get(), 1);
-	
-	// send AD5587 write address and the register we want to read
-	stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
-	stm32::i2c::send_byte(m_i2c_handle, reg);
+    #if not defined(X86_UNIT_TESTING_ONLY)
+        // read this number of bytes
+        LL_I2C_SetTransferSize(m_i2c_handle.get(), 1);
+        
+        // send AD5587 write address and the register we want to read
+        stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
+        stm32::i2c::send_byte(m_i2c_handle, reg);
 
-	// send AD5587 read address and get received data
-	stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::READ);
-	stm32::i2c::receive_byte(m_i2c_handle, rx_byte);
+        // send AD5587 read address and get received data
+        stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::READ);
+        stm32::i2c::receive_byte(m_i2c_handle, rx_byte);
 
-	LL_I2C_GenerateStopCondition(m_i2c_handle.get());
+        LL_I2C_GenerateStopCondition(m_i2c_handle.get());
 
-	#if defined(USE_RTT) 
-        switch(reg)
-        {
-            case 0x00:
-                SEGGER_RTT_printf(0, "\n\nDeviceID (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x01:
-                SEGGER_RTT_printf(0, "\nConfiguration Register 1 (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x02: 
-                SEGGER_RTT_printf(0, "\nInterrupt status register (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x03: 
-                SEGGER_RTT_printf(0, "\nKeylock and event counter register (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x04: 
-                SEGGER_RTT_printf(0, "\nKey Event Register A (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x05: 
-                SEGGER_RTT_printf(0, "\nKey Event Register B (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x06: 
-                SEGGER_RTT_printf(0, "\nKey Event Register C (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x07: 
-                SEGGER_RTT_printf(0, "\nKey Event Register D (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x08: 
-                SEGGER_RTT_printf(0, "\nKey Event Register E (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x09: 
-                SEGGER_RTT_printf(0, "\nKey Event Register F (%u): %u", +reg, +rx_byte);
-                break; 
-            case 0x11: 
-                SEGGER_RTT_printf(0, "\nGPIO Interrupt Status 1: (%u): %u", +reg, +rx_byte);
-                break;                                
-            case 0x12: 
-                SEGGER_RTT_printf(0, "\nGPIO Interrupt Status 2: (%u): %u", +reg, +rx_byte);
-                break;                                
-            case 0x13: 
-                SEGGER_RTT_printf(0, "\nGPIO Interrupt Status 3: (%u): %u", +reg, +rx_byte);
-                break;                                                                
-            case 0x0A: 
-                SEGGER_RTT_printf(0, "\nKey Event Register G (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x0B: 
-                SEGGER_RTT_printf(0, "\nKey Event Register H (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x0C: 
-                SEGGER_RTT_printf(0, "\nKey Event Register I (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x0D: 
-                SEGGER_RTT_printf(0, "\nKey Event Register J (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x1D: 
-                SEGGER_RTT_printf(0, "\nR0-R7 Keypad selection (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x1E: 
-                SEGGER_RTT_printf(0, "\nC0-C7 Keypad selection (%u): %u", +reg, +rx_byte);
-                break;
-            case 0x1F: 
-                SEGGER_RTT_printf(0, "\nC8-C9 Keypad selection (%u): %u", +reg, +rx_byte);
-                break;                                
-            case 0x20: 
-                SEGGER_RTT_printf(0, "\nGPI Key Mode 1 (%u): %u", +reg, +rx_byte);
-                break;  
-            case 0x21: 
-                SEGGER_RTT_printf(0, "\nGPI Key Mode 2 (%u): %u", +reg, +rx_byte);
-                break;  
-            case 0x22: 
-                SEGGER_RTT_printf(0, "\nGPI Key Mode 3 (%u): %u", +reg, +rx_byte);
-                break;                                              
-        }
-		
-	#endif	
-#endif	    
+        #if defined(USE_RTT) 
+            switch(reg)
+            {
+                case 0x00:
+                    SEGGER_RTT_printf(0, "\n\nDeviceID (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x01:
+                    SEGGER_RTT_printf(0, "\nConfiguration Register 1 (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x02: 
+                    SEGGER_RTT_printf(0, "\nInterrupt status register (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x03: 
+                    SEGGER_RTT_printf(0, "\nKeylock and event counter register (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x04: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register A (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x05: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register B (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x06: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register C (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x07: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register D (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x08: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register E (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x09: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register F (%u): %u", +reg, +rx_byte);
+                    break; 
+                case 0x11: 
+                    SEGGER_RTT_printf(0, "\nGPIO Interrupt Status 1: (%u): %u", +reg, +rx_byte);
+                    break;                                
+                case 0x12: 
+                    SEGGER_RTT_printf(0, "\nGPIO Interrupt Status 2: (%u): %u", +reg, +rx_byte);
+                    break;                                
+                case 0x13: 
+                    SEGGER_RTT_printf(0, "\nGPIO Interrupt Status 3: (%u): %u", +reg, +rx_byte);
+                    break;                                                                
+                case 0x0A: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register G (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x0B: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register H (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x0C: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register I (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x0D: 
+                    SEGGER_RTT_printf(0, "\nKey Event Register J (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x1D: 
+                    SEGGER_RTT_printf(0, "\nR0-R7 Keypad selection (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x1E: 
+                    SEGGER_RTT_printf(0, "\nC0-C7 Keypad selection (%u): %u", +reg, +rx_byte);
+                    break;
+                case 0x1F: 
+                    SEGGER_RTT_printf(0, "\nC8-C9 Keypad selection (%u): %u", +reg, +rx_byte);
+                    break;                                
+                case 0x20: 
+                    SEGGER_RTT_printf(0, "\nGPI Key Mode 1 (%u): %u", +reg, +rx_byte);
+                    break;  
+                case 0x21: 
+                    SEGGER_RTT_printf(0, "\nGPI Key Mode 2 (%u): %u", +reg, +rx_byte);
+                    break;  
+                case 0x22: 
+                    SEGGER_RTT_printf(0, "\nGPI Key Mode 3 (%u): %u", +reg, +rx_byte);
+                    break;                                              
+            }
+            
+        #endif	// USE_RTT
+    #endif	    
 }
 
 

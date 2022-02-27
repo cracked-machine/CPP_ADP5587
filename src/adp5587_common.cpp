@@ -47,18 +47,11 @@ void CommonFunctions::write_register(uint8_t reg [[maybe_unused]], uint8_t tx_by
 void CommonFunctions::exti_isr()
 {
 #if not defined(X86_UNIT_TESTING_ONLY)
-    if (LL_EXTI_IsActiveFallingFlag_0_31(LL_EXTI_LINE_5) != RESET)
-    {
-        // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
-        update_key_events();
-        LL_EXTI_ClearFallingFlag_0_31(LL_EXTI_LINE_5);
 
+            // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
+            update_key_events();
+            LL_EXTI_ClearFallingFlag_0_31(LL_EXTI_LINE_5);
 
-        // this is done for debug purposes only
-        // uint8_t read_value{0};
-        // read_register(Registers::INT_STAT, read_value);
-        // read_register(Registers::KEY_LCK_EC_STAT, read_value);
-    }
 #endif
 }
 

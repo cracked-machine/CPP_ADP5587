@@ -24,7 +24,7 @@
 #define __ADP5587_COMMON_HPP__
 
 #include <allocation_restricted_base.hpp>
-#include <ll_i2c_utils.hpp>
+#include <i2c_utils.hpp>
 #include <isr_manager_stm32g0.hpp>
 
 

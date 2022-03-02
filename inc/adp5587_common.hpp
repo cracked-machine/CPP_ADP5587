@@ -23,19 +23,10 @@
 #ifndef __ADP5587_COMMON_HPP__
 #define __ADP5587_COMMON_HPP__
 
-#if defined(X86_UNIT_TESTING_ONLY)
-#else
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wvolatile"
-		#include "main.h"
-		#include "i2c.h"	
-	#pragma GCC diagnostic pop
-
-#endif
-
 #include <allocation_restricted_base.hpp>
 #include <ll_i2c_utils.hpp>
 #include <isr_manager_stm32g0.hpp>
+
 
 namespace adp5587
 {

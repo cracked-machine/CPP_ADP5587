@@ -29,7 +29,7 @@ namespace adp5587
 {
 
 template<typename DEVICE_ISR_ENUM>
-class Driver : public AllocationRestrictedBase, public CommonFunctions
+class Driver : public RestrictedBase, public CommonFunctions
 {
 public:
 

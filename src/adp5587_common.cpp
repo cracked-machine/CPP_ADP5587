@@ -21,7 +21,9 @@
 // SOFTWARE.
 
 #include <adp5587_common.hpp>
-
+#if defined(USE_RTT)
+#include <SEGGER_RTT.h>
+#endif
 
 namespace adp5587
 {

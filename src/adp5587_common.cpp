@@ -30,17 +30,16 @@ void CommonFunctions::write_register(uint8_t reg [[maybe_unused]], uint8_t tx_by
 {
     #if not defined(X86_UNIT_TESTING_ONLY)
         // write this number of bytes: The data byte(s) AND the address byte
-        const uint8_t num_bytes {2};
-        LL_I2C_SetTransferSize(m_i2c_handle.get(), num_bytes);
+        stm32::i2c::set_numbytes(m_i2c_handle.get(), 2);
         
         // send AD5587 write address and the register we want to write
-        stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
-        stm32::i2c::send_byte(m_i2c_handle, reg);
+        stm32::i2c::send_addr(m_i2c_handle.get(), m_i2c_addr, stm32::i2c::MsgType::WRITE);
+        stm32::i2c::send_byte(m_i2c_handle.get(), reg);
 
         // send AD5587 read address and get received data
-        stm32::i2c::send_byte(m_i2c_handle, tx_byte);
+        stm32::i2c::send_byte(m_i2c_handle.get(), tx_byte);
 
-        LL_I2C_GenerateStopCondition(m_i2c_handle.get());
+        stm32::i2c::generate_stop_condition(m_i2c_handle.get());        
     #endif
 }
 
@@ -50,7 +49,9 @@ void CommonFunctions::exti_isr()
 
             // tell the driver to read keypad FIFO data and clear adp5587 HW interrupt registers
             update_key_events();
-            LL_EXTI_ClearFallingFlag_0_31(LL_EXTI_LINE_5);
+            // clear the falling flag for EXTI Line 5
+            EXTI->FPR1 = EXTI->FPR1 | EXTI_IMR1_IM5;
+            
 
 #endif
 }
@@ -128,7 +129,7 @@ bool CommonFunctions::probe_i2c()
 	bool success {true};
 
     // check ADP5587 is listening on 0x60 (write). Left-shift of address is *not* required.
-	if (stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
+	if (stm32::i2c::send_addr(m_i2c_handle.get(), m_i2c_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
     {
         success = false;
     }
@@ -158,17 +159,17 @@ void CommonFunctions::read_register(const uint8_t reg [[maybe_unused]], uint8_t 
 {
     #if not defined(X86_UNIT_TESTING_ONLY)
         // read this number of bytes
-        LL_I2C_SetTransferSize(m_i2c_handle.get(), 1);
+        stm32::i2c::set_numbytes(m_i2c_handle.get(), 1);
         
         // send AD5587 write address and the register we want to read
-        stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::WRITE);
-        stm32::i2c::send_byte(m_i2c_handle, reg);
+        stm32::i2c::send_addr(m_i2c_handle.get(), m_i2c_addr, stm32::i2c::MsgType::WRITE);
+        stm32::i2c::send_byte(m_i2c_handle.get(), reg);
 
         // send AD5587 read address and get received data
-        stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::READ);
-        stm32::i2c::receive_byte(m_i2c_handle, rx_byte);
+        stm32::i2c::send_addr(m_i2c_handle.get(), m_i2c_addr, stm32::i2c::MsgType::READ);
+        stm32::i2c::receive_byte(m_i2c_handle.get(), rx_byte);
 
-        LL_I2C_GenerateStopCondition(m_i2c_handle.get());
+        stm32::i2c::generate_stop_condition(m_i2c_handle.get());  
 
         #if defined(USE_RTT) 
             switch(reg)

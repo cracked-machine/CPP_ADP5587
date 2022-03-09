@@ -27,7 +27,6 @@
 #include <i2c_utils.hpp>
 #include <isr_manager_stm32g0.hpp>
 
-
 namespace adp5587
 {
 

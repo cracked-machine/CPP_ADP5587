@@ -34,7 +34,7 @@ class Driver : public RestrictedBase, public CommonFunctions
 public:
 
     // @brief Construct a new Driver object
-    Driver(I2C_TypeDef *i2c_handle)
+    explicit Driver(I2C_TypeDef *i2c_handle)
     {
 
         // set the I2C_TypeDef pointer here

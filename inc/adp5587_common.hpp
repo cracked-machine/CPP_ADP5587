@@ -254,10 +254,7 @@ private:
     void read_register(const uint8_t reg, uint8_t &rx_byte);
 
     // @brief Updates the stored key events FIFO data and resets the HW ISR
-    void update_key_events();
-
-    // @brief Notify this driver that the stored key events data has been read and can be cleared.
-    void clear_key_events();    
+    void update_key_events(); 
 
     // @brief Read the FIFO bytes into "m_key_event_fifo" member byte array
     void read_fifo_bytes_from_hw();

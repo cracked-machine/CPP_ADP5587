@@ -327,12 +327,6 @@ void CommonFunctions::update_key_events()
     }
 }
 
-
-void CommonFunctions::clear_key_events()
-{
-    m_key_event_fifo.fill(KeyPadMappings::INIT);
-}
-
 void CommonFunctions::read_fifo_bytes_from_hw()
 {
     // read the FIFO bytes into class member byte array

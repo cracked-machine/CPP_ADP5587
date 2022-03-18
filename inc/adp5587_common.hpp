@@ -196,7 +196,8 @@ public:
 protected:
     
     // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
-    std::unique_ptr<I2C_TypeDef> m_i2c_handle;
+    // std::unique_ptr<I2C_TypeDef> m_i2c_handle;
+    I2C_TypeDef* m_i2c_handle;
 
     // @brief local store for ADP5587 key event FIFO
     std::array<KeyPadMappings, 10> m_key_event_fifo {KeyPadMappings::INIT};    

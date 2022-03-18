@@ -38,7 +38,8 @@ public:
     {
 
         // set the I2C_TypeDef pointer here
-        m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
+        // m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
+        m_i2c_handle = i2c_handle;
 
         // register the interrupt with STM32G0InterruptManager
         m_ext_int_handler.register_driver(this);

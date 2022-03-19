@@ -131,11 +131,12 @@ bool CommonFunctions::probe_i2c()
 	bool success {true};
 
     // check ADP5587 is listening on 0x60 (write). Left-shift of address is *not* required.
+    #ifndef X86_UNIT_TESTING_ONLY
 	if (stm32::i2c::send_addr(m_i2c_handle, m_i2c_addr, stm32::i2c::MsgType::PROBE) == stm32::i2c::Status::NACK) 
     {
         success = false;
     }
- 
+    #endif
     return success;
 }
 

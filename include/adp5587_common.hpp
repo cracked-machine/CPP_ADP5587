@@ -27,6 +27,10 @@
 #include <i2c_utils.hpp>
 #include <isr_manager_stm32g0.hpp>
 
+#ifdef X86_UNIT_TESTING_ONLY
+    #include <mock_cmsis.hpp>
+#endif
+
 namespace adp5587
 {
 

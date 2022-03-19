@@ -14,9 +14,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ADP5587_TEST_SUITE)
 
     # add external deps from git repos
     include(cmake/external.cmake)
-    target_include_directories(${BUILD_NAME} PRIVATE 
-        ${CMAKE_BINARY_DIR}/embedded_utils/include
-    )
 
     # enable static analysis
     include(cmake/cppcheck.cmake)

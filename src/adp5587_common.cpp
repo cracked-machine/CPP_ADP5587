@@ -30,7 +30,6 @@ namespace adp5587
 
 void CommonFunctions::write_register(uint8_t reg [[maybe_unused]], uint8_t tx_byte [[maybe_unused]])
 {
-    #if not defined(X86_UNIT_TESTING_ONLY)
         // write this number of bytes: The data byte(s) AND the address byte
         stm32::i2c::set_numbytes(m_i2c_handle, 2);
         
@@ -42,7 +41,6 @@ void CommonFunctions::write_register(uint8_t reg [[maybe_unused]], uint8_t tx_by
         stm32::i2c::send_byte(m_i2c_handle, tx_byte);
 
         stm32::i2c::generate_stop_condition(m_i2c_handle);        
-    #endif
 }
 
 void CommonFunctions::exti_isr()

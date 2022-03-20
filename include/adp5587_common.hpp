@@ -28,6 +28,7 @@
 #include <isr_manager_stm32g0.hpp>
 
 #ifdef X86_UNIT_TESTING_ONLY
+    // This file should contain CMSIS bit definitions
     #include <mock_cmsis.hpp>
 #endif
 

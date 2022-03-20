@@ -8,7 +8,7 @@ FetchContent_Populate(
   SOURCE_DIR embedded_utils
 )
 
-# fetch and build "embedded_utils" code repo
+# fetch and build "stm32_interrupt_managers" code repo
 FetchContent_Populate(
   stm32_interrupt_managers
   GIT_REPOSITORY https://github.com/cracked-machine/stm32_interrupt_managers.git

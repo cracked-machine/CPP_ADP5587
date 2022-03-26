@@ -1,35 +1,27 @@
+[![CMake](https://github.com/cracked-machine/cpp_adp5587/actions/workflows/cmake.yml/badge.svg)](https://github.com/cracked-machine/cpp_adp5587/actions/workflows/cmake.yml)
+[![Codecov](https://img.shields.io/codecov/c/github/cracked-machine/cpp_adp5587)](https://app.codecov.io/gh/cracked-machine/cpp_adp5587)
+
+
 # CPP_ADP5587
 Library for Analog Devices ADP5587 "I/O Expander and QWERTY Keypad Controller" for STM32
 
-## Design
-![](docs/ADP5587_Class_Diagram.png)
 
-### Running Units Tests on X86
+See the [wiki](https://github.com/cracked-machine/cpp_adp5587/wiki) for documentation / reference
 
-Running `cmake` in the root directory will invoke the tests.
-It is recommended to use VSCode and "CMake Tools" extension with Test Suite, but if you insist on using the CLI:
+See `.vscode/tasks.json` for details on the individual toolchain commands.
+#### Running Units Tests on X86
 
-- Configure the testsuite:
-`cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_C_COMPILER:FILEPATH=/bin/x86_64-linux-gnu-gcc-10 -Bbuild -G Ninja .`
-- Build the testsuite
-`cmake --build build --config Debug --target all --`
-- Run the testsuite
+When you run the default CMake build, the output is linked with the Catch2 library. To run the testsuite use the command:
 `./build/test_suite`
-- Clean the testsuite
-`cmake --build build --config Debug --target clean --`
 
-### Adding this library to your STM32 Project
+
+#### Adding this library to your STM32 Project
 
 Include this repo into your project as a submodule and add the following line to your top-level CMakeFiles.txt:
 
-`add_subdirectory(embedded_utils)`
+`add_subdirectory(cpp_adp5587)`
 
-This assumes your project's top-level CMakeFiles.txt is already configured for STM32 platform.
+This assumes your top-level CMakeFiles.txt is already configured for STM32 platform.
 
-### Debug
 
-`GDB` is enabled in VSCode (F5)
 
-### Code Coverage report
-
-Run the "coverage report" task. Results can be found in `coverage` directory.

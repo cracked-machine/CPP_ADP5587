@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE coverage SYSTEM 'http://cobertura.sourceforge.net/xml/coverage-04.dtd'>
-<coverage line-rate="0.0" function-rate="0.0" branch-rate="0.0" lines-covered="0" lines-valid="130" functions-covered="0" functions-valid="20" branches-covered="0" branches-valid="94" complexity="0.0" timestamp="1649533021" version="gcovr 5.1">
+<coverage line-rate="0.0" function-rate="0.0" branch-rate="0.0" lines-covered="0" lines-valid="130" functions-covered="0" functions-valid="20" branches-covered="0" branches-valid="94" complexity="0.0" timestamp="1649534415" version="gcovr 5.1">
   <sources>
     <source>/home/chris/Projects/Embedded/BassStation/BassStationSequencerSW/extern/cpp_adp5587</source>
   </sources>
@@ -10,8 +10,8 @@
         <class name="adp5587_common_hpp" filename="include/adp5587_common.hpp" line-rate="0.0" branch-rate="0.0" complexity="0.0">
           <methods/>
           <lines>
-            <line number="147" hits="0" branch="false"/>
-            <line number="149" hits="0" branch="false"/>
+            <line number="150" hits="0" branch="false"/>
+            <line number="152" hits="0" branch="false"/>
           </lines>
         </class>
       </classes>

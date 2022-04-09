@@ -12,11 +12,22 @@ See [readme](tests) for information on unit testing/mocking.
 
 #### Adding this library to your STM32 Project
 
-Include this repo into your project as a submodule and add the following line to your top-level CMakeFiles.txt:
+There are two ways to add this library to your project's CMakeLists.txt:
 
-`add_subdirectory(cpp_adp5587)`
+1. Required external dependencies can be added to your project by including the [external.cmake](cmake/external.cmake) to your top level project:
 
-This assumes your top-level CMakeFiles.txt is already configured for STM32 platform.
+```
+set(BUILD_NAME "MyProject")
+add_executable(${BUILD_NAME} "")
+include(cmake/external.cmake)
+```
+
+2. Alternatively, you can add the [embedded_utils](https://github.com/cracked-machine/embedded_utils.git) and [stm32_interrupt_managers](https://github.com/cracked-machine/stm32_interrupt_managers.git) to your project as submodules and add the subdirectories:
+
+```
+add_subdirectory(extern/embedded_utils)
+add_subdirectory(extern/stm32_interrupt_managers)
+```
 
 
 

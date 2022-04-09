@@ -27,10 +27,8 @@
 #include <i2c_utils.hpp>
 #include <isr_manager_stm32g0.hpp>
 
-#ifdef X86_UNIT_TESTING_ONLY
-    // This file should contain CMSIS bit definitions
-    #include <mock_cmsis.hpp>
-#endif
+// defines "USED_API __attribute__((__used__))"
+#include <gnuc_ext_defs.hpp>
 
 namespace adp5587
 {
@@ -149,7 +147,7 @@ public:
     // @param R The right literal operand
     // @return constexpr SCOPED_ENUM Returns the combined value as SCOPED_ENUM enum type
     template<typename SCOPED_ENUM>
-    constexpr friend SCOPED_ENUM operator | (SCOPED_ENUM L, SCOPED_ENUM R) 
+    USED_API constexpr friend SCOPED_ENUM operator | (SCOPED_ENUM L, SCOPED_ENUM R) 
     { 
         return static_cast<SCOPED_ENUM>(static_cast<int>(L) | static_cast<int>(R));
     }

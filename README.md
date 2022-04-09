@@ -5,14 +5,9 @@
 # CPP_ADP5587
 Library for Analog Devices ADP5587 "I/O Expander and QWERTY Keypad Controller" for STM32
 
-
 See the [wiki](https://github.com/cracked-machine/cpp_adp5587/wiki) for documentation / reference
 
-See `.vscode/tasks.json` for details on the individual toolchain commands.
-#### Running Units Tests on X86
-
-When you run the default CMake build, the output is linked with the Catch2 library. To run the testsuite use the command:
-`./build/test_suite`
+See [readme](tests) for information on unit testing/mocking.
 
 
 #### Adding this library to your STM32 Project

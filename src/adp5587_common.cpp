@@ -320,37 +320,37 @@ void CommonFunctions::update_key_events()
 void CommonFunctions::read_fifo_bytes_from_hw()
 {
     // read the FIFO bytes into class member byte array
-
+    /// @note don't use std::array.at(), this will force exception handling to bloat the linked .elf
     uint8_t read_value {0};
     read_register(Registers::KEY_EVENTA, read_value);
-    m_key_event_fifo.at(0) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[0] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTB, read_value);
-    m_key_event_fifo.at(1) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[1] = static_cast<KeyPadMappings>(read_value);
     
     read_register(Registers::KEY_EVENTC, read_value);
-    m_key_event_fifo.at(2) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[2] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTD, read_value);
-    m_key_event_fifo.at(3) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[3] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTE, read_value);
-    m_key_event_fifo.at(4) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[4] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTF, read_value);
-    m_key_event_fifo.at(5) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[5] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTG, read_value);
-    m_key_event_fifo.at(6) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[6] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTH, read_value);
-    m_key_event_fifo.at(7) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[7] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTI, read_value);
-    m_key_event_fifo.at(8) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[8] = static_cast<KeyPadMappings>(read_value);
 
     read_register(Registers::KEY_EVENTJ, read_value);
-    m_key_event_fifo.at(9) = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[9] = static_cast<KeyPadMappings>(read_value);
 
 
 }

@@ -6,6 +6,15 @@ project(ADP5587_TEST_SUITE VERSION 0.1 DESCRIPTION "ADP5587_TEST_SUITE")
 # if this is the main project then configure the build for test_suite only
 if(CMAKE_PROJECT_NAME STREQUAL ADP5587_TEST_SUITE)
 
+    # generate the header file to define USED_API macro for unit test only
+    set(USED_API "__attribute__((__used__))")
+    configure_file(cmake/gnuc_ext_defs.hpp.in ${CMAKE_CURRENT_BINARY_DIR}/include/gnuc_ext_defs.hpp @ONLY)
+    include_directories(build/include)
+
+    # include the mock library with all unit test build source files
+    add_definitions(-include ${CMAKE_BINARY_DIR}/embedded_utils/tests/mocks/mock.hpp) 
+
+    # x86 build config
     include(cmake/linux.cmake)
 
     # BUILD_NAME is set in cmake/linux.cmake

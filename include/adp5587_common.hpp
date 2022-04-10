@@ -27,8 +27,6 @@
 #include <i2c_utils.hpp>
 #include <isr_manager_stm32g0.hpp>
 
-// defines "USED_API __attribute__((__used__))"
-#include <gnuc_ext_defs.hpp>
 
 namespace adp5587
 {
@@ -147,7 +145,7 @@ public:
     // @param R The right literal operand
     // @return constexpr SCOPED_ENUM Returns the combined value as SCOPED_ENUM enum type
     template<typename SCOPED_ENUM>
-    USED_API constexpr friend SCOPED_ENUM operator | (SCOPED_ENUM L, SCOPED_ENUM R) 
+    constexpr friend SCOPED_ENUM operator | (SCOPED_ENUM L, SCOPED_ENUM R) 
     { 
         return static_cast<SCOPED_ENUM>(static_cast<int>(L) | static_cast<int>(R));
     }
@@ -264,13 +262,11 @@ private:
 
     void write_config_bits(uint8_t config_bits);
     void clear_config_bits(uint8_t config_bits);
-
-
-
-    
-
-
 };
+
+// out-of-class declaration for friend operator overloading
+template<typename SCOPED_ENUM>
+constexpr SCOPED_ENUM operator | (SCOPED_ENUM L, SCOPED_ENUM R);
 
 } // namespace adp5587
 

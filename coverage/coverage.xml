@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE coverage SYSTEM 'http://cobertura.sourceforge.net/xml/coverage-04.dtd'>
-<coverage line-rate="0.0" function-rate="0.0" branch-rate="0.0" lines-covered="0" lines-valid="130" functions-covered="0" functions-valid="20" branches-covered="0" branches-valid="94" complexity="0.0" timestamp="1649534415" version="gcovr 5.1">
+<coverage line-rate="0.0" function-rate="0.0" branch-rate="0.0" lines-covered="0" lines-valid="142" functions-covered="0" functions-valid="24" branches-covered="0" branches-valid="94" complexity="0.0" timestamp="1649611586" version="gcovr 5.1">
   <sources>
     <source>/home/chris/Projects/Embedded/BassStation/BassStationSequencerSW/extern/cpp_adp5587</source>
   </sources>
@@ -10,8 +10,25 @@
         <class name="adp5587_common_hpp" filename="include/adp5587_common.hpp" line-rate="0.0" branch-rate="0.0" complexity="0.0">
           <methods/>
           <lines>
+            <line number="148" hits="0" branch="false"/>
             <line number="150" hits="0" branch="false"/>
-            <line number="152" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="adp5587_hpp" filename="include/adp5587.hpp" line-rate="0.0" branch-rate="0.0" complexity="0.0">
+          <methods/>
+          <lines>
+            <line number="37" hits="0" branch="false"/>
+            <line number="42" hits="0" branch="false"/>
+            <line number="45" hits="0" branch="false"/>
+            <line number="48" hits="0" branch="false"/>
+            <line number="51" hits="0" branch="false"/>
+            <line number="63" hits="0" branch="false"/>
+            <line number="65" hits="0" branch="false"/>
+            <line number="77" hits="0" branch="false"/>
+            <line number="79" hits="0" branch="false"/>
+            <line number="81" hits="0" branch="false"/>
+            <line number="84" hits="0" branch="false"/>
+            <line number="86" hits="0" branch="false"/>
           </lines>
         </class>
       </classes>

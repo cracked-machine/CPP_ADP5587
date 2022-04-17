@@ -18,5 +18,8 @@ Add this repo ([cpp_adp5587](https://github.com/cracked-machine/cpp_adp5587.git)
 add_subdirectory(extern/cpp_adp5587)
 ```
 
+#### External Dependencies
+
+[Embedded Utils](https://github.com/cracked-machine/embedded_utils)
 
 

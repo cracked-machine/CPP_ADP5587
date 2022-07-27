@@ -107,9 +107,9 @@ public:
 
   // Keypad release encodings. These values appear in the KeyEventReg entries after key press/release events
   // see datasheet page 9 (https://www.analog.com/media/en/technical-documentation/data-sheets/adp5587.pdf)
-  // To get Key press events IDs, bitwise-OR the KeyPadMappings::XX_OFF values with KeyPadMappings::ON .
+  // To get Key press events IDs, bitwise-OR the KeyEventIndex::XX_OFF values with KeyEventIndex::ON .
   // See the templated overload operator function below.
-  enum class KeyPadMappings
+  enum class KeyEventIndex
   {
     // clang-format off
     INIT=0,
@@ -169,7 +169,7 @@ public:
 
 protected:
   // @brief local store for ADP5587 key event FIFO
-  std::array<KeyPadMappings, 10> m_key_event_fifo{KeyPadMappings::INIT};
+  std::array<KeyEventIndex, 10> m_key_event_fifo{KeyEventIndex::INIT};
 
   // @brief The i2c slave address for ADP5587ACPZ-1-R7
   const uint8_t m_i2c_addr{0x60};

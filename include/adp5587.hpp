@@ -166,39 +166,39 @@ public:
     /// @note don't use std::array.at(), this will force exception handling to bloat the linked .elf
     uint8_t read_value{0};
     read_register(Registers::KEY_EVENTA, read_value);
-    m_key_event_fifo[0] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[0] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTB, read_value);
-    m_key_event_fifo[1] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[1] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTC, read_value);
-    m_key_event_fifo[2] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[2] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTD, read_value);
-    m_key_event_fifo[3] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[3] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTE, read_value);
-    m_key_event_fifo[4] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[4] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTF, read_value);
-    m_key_event_fifo[5] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[5] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTG, read_value);
-    m_key_event_fifo[6] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[6] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTH, read_value);
-    m_key_event_fifo[7] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[7] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTI, read_value);
-    m_key_event_fifo[8] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[8] = static_cast<KeyEventIndex>(read_value);
 
     read_register(Registers::KEY_EVENTJ, read_value);
-    m_key_event_fifo[9] = static_cast<KeyPadMappings>(read_value);
+    m_key_event_fifo[9] = static_cast<KeyEventIndex>(read_value);
   }
 
   // @brief Get the list of key events (last 10)
   // @param key_events_list
-  void get_key_events(std::array<adp5587::Driver<DEVICE_ISR_ENUM>::KeyPadMappings, 10> &key_events_list) { key_events_list = m_key_event_fifo; }
+  void get_key_events(std::array<adp5587::Driver<DEVICE_ISR_ENUM>::KeyEventIndex, 10> &key_events_list) { key_events_list = m_key_event_fifo; }
 
   void write_register(uint8_t reg [[maybe_unused]], uint8_t tx_byte [[maybe_unused]])
   {

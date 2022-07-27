@@ -40,9 +40,6 @@ public:
       : m_i2c_handle(*i2c_handle)
   {
 
-    // register the interrupt with STM32G0InterruptManager
-    m_ext_int_handler.register_driver(this);
-
     // check the slave device is talking
     probe_i2c();
 
@@ -402,20 +399,20 @@ private:
   struct ExtIntHandler : public stm32::isr::InterruptManagerStm32Base<DEVICE_ISR_ENUM>
   {
     // @brief the parent driver class
-    Driver *m_parent_driver_ptr;
+    Driver &m_parent_driver_ptr;
     // @brief initialise and register this handler instance with IsrManagerStm32g0
     // @param parent_driver_ptr the instance to register
-    void register_driver(Driver *parent_driver_ptr)
+    ExtIntHandler(Driver *parent_driver_ptr)
+        : m_parent_driver_ptr(*parent_driver_ptr)
     {
-      m_parent_driver_ptr = parent_driver_ptr;
       // register pointer to this handler class in stm32::isr::IsrManagerStm32g0
       stm32::isr::InterruptManagerStm32Base<DEVICE_ISR_ENUM>::register_handler(DEVICE_ISR_ENUM::exti5, this);
     }
     // @brief The callback used by IsrManagerStm32g0
-    virtual void ISR() { m_parent_driver_ptr->exti_isr(); }
+    virtual void ISR() { m_parent_driver_ptr.exti_isr(); }
   };
   // @brief handler object
-  ExtIntHandler m_ext_int_handler;
+  ExtIntHandler m_ext_int_handler{this};
 };
 
 } // namespace adp5587

@@ -30,7 +30,7 @@
 namespace adp5587
 {
 
-class CommonFunctions
+class CommonData
 {
 public:
   // @brief Incomplete list of ADP5587 device registers
@@ -167,69 +167,14 @@ public:
     return static_cast<SCOPED_ENUM>(static_cast<int>(L) | static_cast<int>(R));
   }
 
-  // @brief Write the byte array to the ADP5587 register
-  // @tparam REG_SIZE
-  // @param reg The register to modify
-  // @param tx_bytes The value to write
-  void write_register(const uint8_t reg, uint8_t tx_byte);
-
-  // @brief callback function for IsrManagerStm32g0
-  // see stm32_interrupt_managers/inc/stm32g0_interrupt_manager_functional.hpp
-  void exti_isr();
-
-  // @brief global enable keypad interrupts
-  void enable_keypad_isr();
-
-  // @brief global disable keypad interrupts
-  void disable_keypad_isr();
-
-  // @brief global enable GPIO interrupts
-  void enable_gpio_isr();
-
-  // @brief global disable GPIO interrupts
-  void disable_gpio_isr();
-
-  // @brief Select inidividual row/col connections as keypad input. Omitted connections will be configured as GPI.
-  void keypad_gpio_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-  // @brief Select if GPI is included in event FIFO
-  void gpio_fifo_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-  // @brief Enable GPI interrupts on inidividual row/col
-  void gpio_interrupt_select(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-  // @brief Set the GPIO direction as output on indiviudal rows/cols
-  void set_gpo_out(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-  // @brief Set the GPIO lvl as active high on indiviudal rows/cols
-  void set_gpi_active_high(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-  // @brief Disable the GPIO debounce on indiviudal rows/cols
-  void disable_debounce(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
-  // @brief Disable the GPIO pullup on indiviudal rows/cols
-  void disable_gpio_pullup(uint8_t row_mask, uint8_t col_mask0_7, uint8_t col_mask8_9);
-
 protected:
-  // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
-  // std::unique_ptr<I2C_TypeDef> m_i2c_handle;
-  I2C_TypeDef *m_i2c_handle;
-
   // @brief local store for ADP5587 key event FIFO
   std::array<KeyPadMappings, 10> m_key_event_fifo{KeyPadMappings::INIT};
 
-  // @brief Confirm ADP5587 replies to write_addr and read_addr with ACK
-  // @return true if both are successful, false if either fail.
-  bool probe_i2c();
-
-  // @brief clear the Key Event Registers (KEY_EVENTx) by reading them and
-  // clear the Interrupt status register (INT_STAT) by writing 1 to each bit
-  void clear_fifo_and_isr();
-
-private:
   // @brief The i2c slave address for ADP5587ACPZ-1-R7
   const uint8_t m_i2c_addr{0x60};
 
+private:
   // @brief Configuration Register 1
   enum ConfigReg
   {
@@ -263,19 +208,6 @@ private:
     LCK2     = (1 << 5),
     K_LCK_EN = (1 << 6), // 0: lock feature is disabled. 1: lock feature is enabled.
   };
-
-  // @brief Read some bytes from the ADP5587 register
-  // @param reg The register to read
-  void read_register(const uint8_t reg, uint8_t &rx_byte);
-
-  // @brief Updates the stored key events FIFO data and resets the HW ISR
-  void update_key_events();
-
-  // @brief Read the FIFO bytes into "m_key_event_fifo" member byte array
-  void read_fifo_bytes_from_hw();
-
-  void write_config_bits(uint8_t config_bits);
-  void clear_config_bits(uint8_t config_bits);
 };
 
 // out-of-class declaration for friend operator overloading

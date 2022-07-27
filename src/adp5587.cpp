@@ -22,11 +22,11 @@
 
 #include <adp5587.hpp>
 
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 
 namespace adp5587
 {
-    // see adp5587_common.hpp/cpp for common driver functions
+// see adp5587_common.hpp/cpp for common driver functions
 
 } // namespace adp5587

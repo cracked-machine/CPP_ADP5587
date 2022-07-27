@@ -23,7 +23,7 @@
 #ifndef __ADP5587_COMMON_HPP__
 #define __ADP5587_COMMON_HPP__
 
-#include <i2c_utils.hpp>
+#include <i2c_utils_ref.hpp>
 #include <isr_manager_stm32g0.hpp>
 #include <restricted_base.hpp>
 

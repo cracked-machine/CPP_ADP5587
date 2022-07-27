@@ -37,11 +37,8 @@ class Driver : public RestrictedBase, public adp5587::CommonData
 public:
   // @brief Construct a new Driver object
   explicit Driver(I2C_TypeDef *i2c_handle)
+      : m_i2c_handle(*i2c_handle)
   {
-
-    // set the I2C_TypeDef pointer here
-    // m_i2c_handle = std::unique_ptr<I2C_TypeDef>(i2c_handle);
-    m_i2c_handle = i2c_handle;
 
     // register the interrupt with STM32G0InterruptManager
     m_ext_int_handler.register_driver(this);
@@ -65,7 +62,7 @@ public:
     bool success{true};
 
     // check ADP5587 is listening on 0x60 (write). Left-shift of address is *not* required.
-    if (stm32::i2c::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c::StartType::PROBE) == stm32::i2c::Status::NACK)
+    if (stm32::i2c_ref::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c_ref::StartType::PROBE) == stm32::i2c_ref::Status::NACK)
     {
       success = false;
     }
@@ -77,17 +74,17 @@ public:
   void read_register(const uint8_t reg [[maybe_unused]], uint8_t &rx_byte [[maybe_unused]])
   {
     // read this number of bytes
-    stm32::i2c::set_numbytes(m_i2c_handle, 1);
+    stm32::i2c_ref::set_numbytes(m_i2c_handle, 1);
 
     // send AD5587 write address and the register we want to read
-    stm32::i2c::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c::StartType::WRITE);
-    stm32::i2c::send_byte(m_i2c_handle, reg);
+    stm32::i2c_ref::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c_ref::StartType::WRITE);
+    stm32::i2c_ref::send_byte(m_i2c_handle, reg);
 
     // send AD5587 read address and get received data
-    stm32::i2c::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c::StartType::READ);
-    stm32::i2c::receive_byte(m_i2c_handle, rx_byte);
+    stm32::i2c_ref::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c_ref::StartType::READ);
+    stm32::i2c_ref::receive_byte(m_i2c_handle, rx_byte);
 
-    stm32::i2c::generate_stop_condition(m_i2c_handle);
+    stm32::i2c_ref::generate_stop_condition(m_i2c_handle);
 
 #if defined(USE_RTT)
     switch (reg)
@@ -209,16 +206,16 @@ public:
   void write_register(uint8_t reg [[maybe_unused]], uint8_t tx_byte [[maybe_unused]])
   {
     // write this number of bytes: The data byte(s) AND the address byte
-    stm32::i2c::set_numbytes(m_i2c_handle, 2);
+    stm32::i2c_ref::set_numbytes(m_i2c_handle, 2);
 
     // send AD5587 write address and the register we want to write
-    stm32::i2c::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c::StartType::WRITE);
-    stm32::i2c::send_byte(m_i2c_handle, reg);
+    stm32::i2c_ref::initialise_slave_device(m_i2c_handle, m_i2c_addr, stm32::i2c_ref::StartType::WRITE);
+    stm32::i2c_ref::send_byte(m_i2c_handle, reg);
 
     // send AD5587 read address and get received data
-    stm32::i2c::send_byte(m_i2c_handle, tx_byte);
+    stm32::i2c_ref::send_byte(m_i2c_handle, tx_byte);
 
-    stm32::i2c::generate_stop_condition(m_i2c_handle);
+    stm32::i2c_ref::generate_stop_condition(m_i2c_handle);
   }
 
   void exti_isr()
@@ -399,9 +396,8 @@ public:
   }
 
 private:
-  // @brief The CMSIS mem-mapped I2C periph. Set in the c'tor
-  // std::unique_ptr<I2C_TypeDef> m_i2c_handle;
-  I2C_TypeDef *m_i2c_handle;
+  // @brief Memory-safe reference to CMSIS mem-mapped i2c_ref periph. Set by ctor initialiser
+  I2C_TypeDef &m_i2c_handle;
 
   struct ExtIntHandler : public stm32::isr::InterruptManagerStm32Base<DEVICE_ISR_ENUM>
   {

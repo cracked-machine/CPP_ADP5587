@@ -17,9 +17,9 @@ FetchContent_Populate(
 )
 
 target_sources(${BUILD_NAME} PRIVATE
-    ${CMAKE_BINARY_DIR}/embedded_utils/src/i2c_utils.cpp
+    ${CMAKE_BINARY_DIR}/embedded_utils/src/i2c_utils_ref.cpp
     ${CMAKE_BINARY_DIR}/embedded_utils/src/restricted_base.cpp
-    ${CMAKE_BINARY_DIR}/embedded_utils/src/spi_utils.cpp
+    ${CMAKE_BINARY_DIR}/embedded_utils/src/spi_utils_ref.cpp
     ${CMAKE_BINARY_DIR}/embedded_utils/src/timer_manager.cpp
     ${CMAKE_BINARY_DIR}/embedded_utils/src/usart_utils.cpp
     ${CMAKE_BINARY_DIR}/stm32_interrupt_managers/src/isr_manager_stm32g0.cpp

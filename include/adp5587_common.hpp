@@ -167,27 +167,6 @@ public:
     return static_cast<SCOPED_ENUM>(static_cast<int>(L) | static_cast<int>(R));
   }
 
-protected:
-  // @brief local store for ADP5587 key event FIFO
-  std::array<KeyEventIndex, 10> m_key_event_fifo{KeyEventIndex::INIT};
-
-  // @brief The i2c slave address for ADP5587ACPZ-1-R7
-  const uint8_t m_i2c_addr{0x60};
-
-private:
-  // @brief Configuration Register 1
-  enum ConfigReg
-  {
-    KE_IEN       = (1 << 0), // Key events interrupt enable.
-    GPI_IEN      = (1 << 1), // GPI interrupt enable.
-    K_LCK_IM     = (1 << 2), // Keypad lock interrupt mask.
-    OVR_FLOW_IEN = (1 << 3), // Overflow interrupt enable.
-    INT_CFG      = (1 << 4), // Interrupt configuration.
-    OVR_FLOW_M   = (1 << 5), // Overflow mode.
-    GPIEM_CFG    = (1 << 6), // GPI event mode configuration.
-    AUTO_INC     = (1 << 7), // 2C auto-increment. Burst read is supported; burst write is not supported.
-  };
-
   // Interrupt status register
   enum IntStatusReg
   {
@@ -208,6 +187,33 @@ private:
     LCK2     = (1 << 5),
     K_LCK_EN = (1 << 6), // 0: lock feature is disabled. 1: lock feature is enabled.
   };
+
+  // @brief Configuration Register 1
+  enum ConfigReg
+  {
+    KE_IEN       = (1 << 0), // Key events interrupt enable.
+    GPI_IEN      = (1 << 1), // GPI interrupt enable.
+    K_LCK_IM     = (1 << 2), // Keypad lock interrupt mask.
+    OVR_FLOW_IEN = (1 << 3), // Overflow interrupt enable.
+    INT_CFG      = (1 << 4), // Interrupt configuration.
+    OVR_FLOW_M   = (1 << 5), // Overflow mode.
+    GPIEM_CFG    = (1 << 6), // GPI event mode configuration.
+    AUTO_INC     = (1 << 7), // 2C auto-increment. Burst read is supported; burst write is not supported.
+  };
+
+protected:
+  // @brief local store for ADP5587 key event FIFO
+  std::array<KeyEventIndex, 10> m_key_event_fifo{KeyEventIndex::INIT};
+
+  // @brief The i2c slave address for ADP5587ACPZ-1-R7
+  const uint8_t m_i2c_addr{0x60};
+
+private:
+
+
+
+
+
 };
 
 // out-of-class declaration for friend operator overloading
